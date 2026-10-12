@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#7A7AFE">
+<title>מחשבון תמחור Jeen לבתי החולים</title>
+<script>document.documentElement.setAttribute("dir","rtl");document.documentElement.setAttribute("lang","he");</script>
+<meta name="description" content="מחשבון תמחור לפלטפורמת Jeen AI עבור מערך בתי החולים הממשלתיים">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&family=Heebo:wght@400;500;600;700&display=swap">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 300 300%27%3E%3Crect width=%27145%27 height=%27300%27 rx=%2772.5%27 fill=%27%23FFB1FC%27/%3E%3Crect x=%27155%27 width=%27145%27 height=%27230%27 rx=%2772.5%27 fill=%27%23FF4D2D%27/%3E%3Crect x=%27155%27 y=%27240%27 width=%27145%27 height=%2760%27 rx=%2730%27 fill=%27%23FFAE34%27/%3E%3C/svg%3E">
+<style>
+html,body{direction:rtl}
+/* Layout: app header + tabs; calculator = inputs column + sticky result panel (stacks on phones, with a bottom total bar). */
+:root{
+  --violet-50:#F3F3FF; --violet-100:#E6E6FF; --violet-200:#CFCFFE; --violet-400:#8F8FFE; --violet-500:#7A7AFE; --violet-600:#6060E8; --violet-700:#4F4FBF;
+  --bg:#FFFFFF; --bg-soft:#F9FAFB; --bg-muted:#F3F4F6; --surface:#FFFFFF;
+  --fg:#030712; --fg-2:#374151; --fg-3:#6B7280; --fg-4:#9CA3AF;
+  --border:#E5E7EB; --border-2:#D1D5DB;
+  --brand:var(--violet-500); --brand-strong:var(--violet-600); --brand-soft:var(--violet-50); --brand-ink:#3C3C95;
+  --on-brand:#FFFFFF; --logo-ink:#470924;
+  --ok:#16A34A; --ok-soft:#F0FDF4; --warn:#B45309; --warn-soft:#FFFBEB;
+  --c1:#7A7AFE; --c2:#ADADFD; --c3:#4F4FBF; --c4:#E7B5EA; --c5:#F4A955; --c6:#E25B4D; --c7:#9CA3AF; --c8:#25256B;
+  --shadow-sm:0 1px 3px rgba(3,7,18,.06),0 1px 2px -1px rgba(3,7,18,.04);
+  --shadow-md:0 4px 10px -2px rgba(3,7,18,.08),0 2px 4px -2px rgba(3,7,18,.04);
+  --focus:0 0 0 3px rgba(122,122,254,.32);
+  --font:'Urbanist','Heebo',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --r-md:8px; --r-lg:12px; --r-xl:16px;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B0D17; --bg-soft:#111425; --bg-muted:#1A1E33; --surface:#13162A;
+  --fg:#F3F4F8; --fg-2:#C9CCDA; --fg-3:#9095AD; --fg-4:#6B7090;
+  --border:#262A44; --border-2:#353A5A;
+  --brand:#8F8FFE; --brand-strong:#ADADFD; --brand-soft:#1E1F45; --brand-ink:#CFCFFE; --on-brand:#0B0D17; --logo-ink:#F6E7EE;
+  --ok:#4ADE80; --ok-soft:#10261A; --warn:#FBBF24; --warn-soft:#2A2110;
+  --c1:#8F8FFE; --c2:#5B5BC9; --c3:#CFCFFE; --c4:#C98ACD; --c5:#F4A955; --c6:#EF7A6E; --c7:#6B7090; --c8:#ADADFD;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 16px -4px rgba(0,0,0,.5);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B0D17; --bg-soft:#111425; --bg-muted:#1A1E33; --surface:#13162A;
+  --fg:#F3F4F8; --fg-2:#C9CCDA; --fg-3:#9095AD; --fg-4:#6B7090;
+  --border:#262A44; --border-2:#353A5A;
+  --brand:#8F8FFE; --brand-strong:#ADADFD; --brand-soft:#1E1F45; --brand-ink:#CFCFFE; --on-brand:#0B0D17; --logo-ink:#F6E7EE;
+  --ok:#4ADE80; --ok-soft:#10261A; --warn:#FBBF24; --warn-soft:#2A2110;
+  --c1:#8F8FFE; --c2:#5B5BC9; --c3:#CFCFFE; --c4:#C98ACD; --c5:#F4A955; --c6:#EF7A6E; --c7:#6B7090; --c8:#ADADFD;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 16px -4px rgba(0,0,0,.5);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
+.num{font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;display:inline-block}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:none;box-shadow:var(--focus);border-radius:var(--r-md)}
+h1,h2,h3{text-wrap:balance;margin:0}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--border)}
+.top-in{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+.brand .logo{display:inline-flex;align-items:center;gap:8px}
+.brand b{font-family:'Urbanist',var(--font);font-weight:500;font-size:22px;letter-spacing:-.01em;color:var(--logo-ink)}
+.brand .sep{width:1px;height:22px;background:var(--border-2)}
+.brand .ttl{font-size:14px;color:var(--fg-2);font-weight:500}
+.tabs{margin-inline-start:auto;display:flex;gap:4px;background:var(--bg-muted);padding:4px;border-radius:10px}
+.tab{border:0;background:transparent;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:500;font-size:14px;color:var(--fg-2);min-height:36px;transition:background .14s var(--ease)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow-sm)}
+.tab:hover{color:var(--fg)}
+@media (max-width:640px){.top-in{gap:10px;padding-block:10px}.tabs{width:100%;margin-inline-start:0}.tab{flex:1}.brand .ttl{font-size:13px}}
+
+/* intro */
+.intro{padding-block:28px 20px;display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--brand);}
+.intro h1{font-size:clamp(24px,3.4vw,32px);font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.intro p{color:var(--fg-2);max-width:68ch;margin:0}
+
+/* layout */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:24px;align-items:start}
+@media (max-width:960px){.calc{grid-template-columns:1fr}}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;display:flex;flex-direction:column;gap:16px}
+.card-h{display:flex;align-items:flex-start;gap:12px}
+.chip-ic{width:36px;height:36px;border-radius:9px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.chip-ic svg{width:18px;height:18px}
+.card-h h2{font-size:17px;font-weight:600}
+.card-h p{margin:2px 0 0;color:var(--fg-3);font-size:13px}
+
+/* presets */
+.presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.preset{border:1px solid var(--border);background:var(--surface);border-radius:var(--r-lg);padding:12px 14px;text-align:start;cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:64px;transition:border-color .14s,background .14s}
+.preset:hover{background:var(--bg-soft)}
+.preset[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft)}
+.preset b{font-weight:600;font-size:15px}
+.preset span{font-size:12px;color:var(--fg-3)}
+@media (max-width:420px){.presets{grid-template-columns:1fr}}
+
+/* fields */
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+@media (max-width:620px){.grid2{grid-template-columns:1fr}}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label,.flabel{font-size:13px;font-weight:500;color:var(--fg)}
+.hint{font-size:12px;color:var(--fg-3)}
+.inwrap{display:flex;align-items:stretch;border:1px solid var(--border-2);border-radius:var(--r-md);background:var(--surface);overflow:hidden;transition:border-color .14s,box-shadow .14s}
+.inwrap:focus-within{border-color:var(--violet-400);box-shadow:var(--focus)}
+.inwrap input{flex:1;min-width:0;border:0;background:transparent;padding:10px 12px;font-size:15px;outline:none;font-variant-numeric:tabular-nums;direction:ltr;text-align:right}
+.inwrap .unit{display:flex;align-items:center;padding-inline:10px;font-size:12px;color:var(--fg-3);background:var(--bg-soft);border-inline-start:1px solid var(--border);white-space:nowrap}
+.step{border:0;background:transparent;width:40px;cursor:pointer;color:var(--fg-2);font-size:18px}
+.step:hover{background:var(--bg-muted)}
+.rate{font-size:12px;color:var(--fg-3)}
+.rate .num{color:var(--fg-2);font-weight:500}
+
+/* segmented */
+.seg{display:flex;gap:4px;background:var(--bg-muted);padding:4px;border-radius:10px;flex-wrap:wrap}
+.seg button{flex:1 1 auto;border:0;background:transparent;border-radius:7px;padding:8px 10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--fg-2);min-height:38px}
+.seg button[aria-checked="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow-sm)}
+
+/* toggle row */
+.trow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px;border:1px solid var(--border);border-radius:var(--r-md)}
+.trow .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.switch{position:relative;width:44px;height:26px;flex:none;border-radius:999px;border:0;background:var(--border-2);cursor:pointer;transition:background .14s}
+.switch::after{content:"";position:absolute;top:3px;inset-inline-start:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:inset-inline-start .14s var(--ease)}
+.switch[aria-checked="true"]{background:var(--brand)}
+.switch[aria-checked="true"]::after{inset-inline-start:21px}
+
+.range{width:100%;accent-color:var(--brand)}
+.note{font-size:13px;color:var(--fg-2);background:var(--brand-soft);border-radius:var(--r-md);padding:10px 12px}
+.note.warn{background:var(--warn-soft);color:var(--fg)}
+.note b{color:var(--brand-ink)}
+
+/* result panel */
+.result{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px)}
+.rcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:20px;display:flex;flex-direction:column;gap:16px}
+.ytabs{display:flex;gap:4px;background:var(--bg-muted);padding:4px;border-radius:10px}
+.ytabs button{flex:1;border:0;background:transparent;border-radius:7px;padding:8px;cursor:pointer;font-weight:500;font-size:13px;color:var(--fg-2);min-height:36px}
+.ytabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow-sm)}
+.total{display:flex;flex-direction:column;gap:2px}
+.total .lbl{font-size:13px;color:var(--fg-3)}
+.total .big{font-size:38px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.total .sub{font-size:13px;color:var(--fg-2)}
+.bar{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--bg-muted);gap:2px}
+.bar i{display:block;height:100%}
+.lines{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.lines li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}
+.lines li:last-child{border-bottom:0}
+.lines .dot{width:10px;height:10px;border-radius:3px}
+.lines .nm{min-width:0}
+.lines .nm small{display:block;color:var(--fg-3);font-size:12px;line-height:1.35}
+.lines .amt{font-weight:600}
+.lines li.zero{color:var(--fg-4)} .lines li.zero .amt{font-weight:500}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok);margin-inline-start:6px;vertical-align:middle}
+.btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:var(--r-md);padding:10px 16px;font-size:14px;font-weight:500;border:1px solid transparent;cursor:pointer;min-height:42px;transition:background .14s}
+.btn.primary{background:var(--brand);color:var(--on-brand)} .btn.primary:hover{background:var(--brand-strong)}
+.btn.secondary{background:var(--surface);border-color:var(--border-2);color:var(--fg)} .btn.secondary:hover{background:var(--bg-soft)}
+.btn svg{width:16px;height:16px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn.wide{width:100%}
+.btn[aria-busy="true"]{opacity:.7;cursor:progress}
+.tin{width:100%;border:1px solid var(--border-2);border-radius:var(--r-md);padding:10px 12px;font-size:15px;background:var(--surface);color:var(--fg);min-height:44px;transition:border-color .14s,box-shadow .14s}
+.tin:focus{outline:none;border-color:var(--brand);box-shadow:var(--focus)}
+.tin::placeholder{color:var(--fg-4)}
+.exp-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:520px){.exp-btns{grid-template-columns:1fr}}
+.exp-status{min-height:20px;font-size:13px;color:var(--fg-3)}
+.exp-status.ok{color:var(--ok)} .exp-status.err{color:var(--warn)}
+.actions .btn{flex:1}
+.fine{font-size:12px;color:var(--fg-3);margin:0}
+
+/* mobile bottom bar */
+.mbar{display:none}
+@media (max-width:960px){
+  .result{position:static}
+  .mbar{display:flex;position:fixed;inset-inline:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 12px rgba(3,7,18,.06)}
+  .mbar .l{display:flex;flex-direction:column;line-height:1.2}
+  .mbar .l small{color:var(--fg-3);font-size:12px}
+  .mbar .l b{font-size:20px;font-weight:600}
+}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r-lg)}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--surface)}
+th,td{padding:10px 14px;text-align:start;border-bottom:1px solid var(--border);white-space:nowrap}
+th{font-size:12px;font-weight:600;color:var(--fg-3);background:var(--bg-soft);letter-spacing:.02em}
+td.n,th.n{text-align:end;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+tr.tot td{font-weight:600;background:var(--brand-soft)}
+td input{width:64px;border:1px solid var(--border-2);border-radius:6px;padding:6px 8px;background:var(--surface);text-align:center;font-variant-numeric:tabular-nums}
+td.wrap{white-space:normal;min-width:220px;color:var(--fg-2)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:820px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{border:1px solid var(--border);border-radius:var(--r-lg);padding:14px 16px;background:var(--surface);display:flex;flex-direction:column;gap:4px;min-width:0}
+.kpi small{font-size:12px;color:var(--fg-3)}
+.kpi b{font-size:22px;font-weight:600;letter-spacing:-.01em}
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;color:var(--fg-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.view[hidden]{display:none!important}
+.sec-title{font-size:18px;font-weight:600;margin-block:8px 0}
+footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6px;flex-direction:column}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:88px;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:50;box-shadow:var(--shadow-md)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="#calc" aria-label="Jeen">
+      <span class="logo" dir="ltr"><svg class="mark" width="26" height="26" viewBox="0 0 300 300" aria-hidden="true"><rect x="0" y="0" width="145" height="300" rx="72.5" fill="#FFB1FC"/><rect x="155" y="0" width="145" height="230" rx="72.5" fill="#FF4D2D"/><rect x="155" y="240" width="145" height="60" rx="30" fill="#FFAE34"/></svg>
+      <b>Jeen</b></span><span class="sep" aria-hidden="true"></span><span class="ttl">מחשבון תמחור · מערך בתי החולים</span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="מסכים">
+      <button class="tab" role="tab" id="tab-calc" aria-controls="v-calc" aria-selected="true">בית חולים</button>
+      <button class="tab" role="tab" id="tab-net" aria-controls="v-net" aria-selected="false">כל המערך</button>
+      <button class="tab" role="tab" id="tab-price" aria-controls="v-price" aria-selected="false">מחירון</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ HOSPITAL CALCULATOR ============ -->
+<section id="v-calc" class="view" role="tabpanel" aria-labelledby="tab-calc">
+  <div class="intro">
+    <span class="eyebrow">מחשבון לבית חולים</span>
+    <h1>כמה יעלה Jeen לבית החולים?</h1>
+    <p>בחרו פרופיל, עדכנו את נתוני השימוש, וקבלו את עלות השנה הראשונה ואת עלות כל שנה נוספת, רכיב אחר רכיב. כל המחירים בדולר, ללא מע״מ.</p>
+  </div>
+
+  <div class="calc">
+    <div class="col">
+      <div class="card">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5M10 9h4M12 7v4"/></svg></div>
+          <div><h2>בית החולים</h2><p>פרופיל התחלתי. אפשר לשנות כל נתון בהמשך.</p></div></div>
+        <div class="presets" role="group" aria-label="פרופיל בית חולים">
+          <button class="preset" data-preset="S" aria-pressed="false"><b>קטן</b><span>עד 1,500 עובדים</span></button>
+          <button class="preset" data-preset="M" aria-pressed="true"><b>בינוני</b><span>עד 3,500 עובדים</span></button>
+          <button class="preset" data-preset="L" aria-pressed="false"><b>גדול</b><span>מעל 3,500 עובדים</span></button>
+        </div>
+        <div class="trow">
+          <div class="t"><span class="flabel" id="lbl-pilot">מצטרף בשנת הפיילוט של המערך</span><span class="hint">פטור מרישוי בשנה הראשונה</span></div>
+          <button class="switch" role="switch" id="pilot" aria-labelledby="lbl-pilot" aria-checked="true"></button>
+        </div>
+        <div class="trow">
+          <div class="t"><span class="flabel" id="lbl-envin">ה-Environment כלול ב-Enterprise Essentials</span><span class="hint">נכון ל-4 בתי החולים הראשונים במערך</span></div>
+          <button class="switch" role="switch" id="envin" aria-labelledby="lbl-envin" aria-checked="false"></button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></div>
+          <div><h2>Jeen Talk · מוקדים ושיחות עם מטופלים</h2><p>נפח חודשי במצב שוטף. החיוב ב-Talk Credits.</p></div></div>
+        <div class="grid2" id="talk-fields"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg></div>
+          <div><h2>AI Workspace · צ׳אט לצוות</h2><p>משלמים רק על משתמש שהתחבר באותו חודש.</p></div></div>
+        <div class="grid2" id="ws-fields"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><path d="M16.5 13v7M13 16.5h7"/></svg></div>
+          <div><h2>Agent Builder · סוכני AI</h2><p>חיוב לפי הרצה של סוכן.</p></div></div>
+        <div class="grid2" id="ag-fields"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <div><h2>הגדרות תמחור</h2><p>משפיעות על מחיר היחידה ועל חלוקת עלויות המערך.</p></div></div>
+        <div class="field">
+          <span class="flabel" id="lbl-tier">מדרגת המחיר של המערך</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lbl-tier" id="tier"></div>
+          <span class="hint" id="tier-hint"></span>
+        </div>
+        <div class="field">
+          <label for="y1pct">היקף השימוש בשנה הראשונה: <span class="num" id="y1pct-v">50%</span></label>
+          <input class="range" type="range" id="y1pct" min="10" max="100" step="5" value="50">
+          <span class="hint">הקמה והטמעה הדרגתית. בשנים הבאות 100%.</span>
+        </div>
+        <div class="grid2" id="set-fields"></div>
+      </div>
+
+      <div class="card" id="export" tabindex="-1">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+          <div><h2>הפקת הצעת מחיר לבית החולים</h2><p>הצעת מחיר מהמערך לבית החולים לפי הנתונים שהזנתם: מסמך Word, וקובץ Excel עם החישוב.</p></div></div>
+        <div class="grid2">
+          <div class="field"><label for="q-name">שם בית החולים</label><input class="tin" id="q-name" autocomplete="organization" placeholder="לדוגמה: המרכז הרפואי"></div>
+          <div class="field"><label for="q-to">לכבוד</label><input class="tin" id="q-to" autocomplete="name" placeholder="שם ותפקיד"></div>
+          <div class="field"><label for="q-date">תאריך ההצעה</label><input class="tin" id="q-date" type="date"></div>
+          <div class="field"><label for="q-valid">תוקף ההצעה בימים</label><input class="tin" id="q-valid" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <div class="exp-btns">
+          <button class="btn primary" id="exp-docx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>הצעת מחיר · Word</button>
+          <button class="btn secondary" id="exp-xlsx" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>מחשבון ההצעה · Excel</button>
+        </div>
+        <span class="exp-status" id="exp-status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <aside class="result" aria-label="תוצאה">
+      <div class="rcard" id="rcard">
+        <div class="ytabs" role="tablist" aria-label="שנה">
+          <button role="tab" id="y-1" aria-selected="true">שנה ראשונה</button>
+          <button role="tab" id="y-2" aria-selected="false">כל שנה נוספת</button>
+        </div>
+        <div class="total" aria-live="polite">
+          <span class="lbl" id="t-lbl">עלות השנה הראשונה, לפני מע״מ</span>
+          <span class="big num" id="t-big">$0</span>
+          <span class="sub" id="t-sub"></span>
+        </div>
+        <div class="bar" id="bar" aria-hidden="true"></div>
+        <ul class="lines" id="lines"></ul>
+        <a class="btn primary wide" href="#export" id="go-exp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>הפקת הצעת מחיר</a>
+        <div class="actions">
+          <button class="btn secondary" id="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>העתקת סיכום</button>
+          <button class="btn secondary" id="reset">איפוס</button>
+        </div>
+        <p class="fine">תשתית הענן היא הערכה ומחויבת לפי חשבון AWS בפועל ועוד 2%. החיוב בפועל לפי השימוש בפועל.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ NETWORK ============ -->
+<section id="v-net" class="view" role="tabpanel" aria-labelledby="tab-net" hidden>
+  <div class="intro">
+    <span class="eyebrow">כל המערך · 5 שנים</span>
+    <h1>עלות שנתית לכל בתי החולים</h1>
+    <p>בחרו תרחיש הצטרפות. הנחות הנפח מחושבות על הצריכה המצרפית של כל המערך, ולכן מחיר היחידה יורד ככל שמצטרפים יותר בתי חולים. נפחי השימוש לפי הפרופילים קטן, בינוני וגדול.</p>
+  </div>
+  <div class="col">
+    <div class="card">
+      <div class="field">
+        <span class="flabel" id="lbl-scn">תרחיש הצטרפות</span>
+        <div class="seg" role="radiogroup" aria-labelledby="lbl-scn" id="scn"></div>
+        <span class="hint" id="scn-hint"></span>
+      </div>
+      <div class="tbl-wrap"><table id="ramp"></table></div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="card">
+      <div class="card-h"><div><h2>עלות שנתית למערך לפי רכיב</h2><p>דולר, לפני מע״מ</p></div></div>
+      <svg class="chart" id="chart" viewBox="0 0 720 280" role="img" aria-label="עלות שנתית למערך"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="tbl-wrap"><table id="nettbl"></table></div>
+  </div>
+</section>
+
+<!-- ============ PRICE LIST ============ -->
+<section id="v-price" class="view" role="tabpanel" aria-labelledby="tab-price" hidden>
+  <div class="intro">
+    <span class="eyebrow">מחירון</span>
+    <h1>מחירי יחידה</h1>
+    <p>לפי מחירון Jeen.ai לנימבוס (רובד 5), אחרי הנחת נימבוס של 30%. דולר, ללא מע״מ.</p>
+  </div>
+  <div class="col" id="pricecol"></div>
+</section>
+
+<footer>
+  <span>Jeen.ai LTD · מחשבון להמחשה. המחירים לפי הצעת המחיר למערך בתי החולים הממשלתיים, בתוקף עד 11/11/2026.</span>
+</footer>
+</main>
+
+<div class="mbar" id="mbar">
+  <div class="l"><small id="mb-l">שנה ראשונה</small><b class="num" id="mb-v">$0</b></div>
+  <a class="btn secondary" href="#rcard">לפירוט</a>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+const DISC = 0.30;
+const LIST = {talk:0.36, ws:50, ie:0.012, ee:0.06, fin:14400, ess:360000, env:50000};
+const NET = Object.fromEntries(Object.entries(LIST).map(([k,v]) => [k, v*(1-DISC)]));
+const TIER = [0, 0.25, 0.50, 0.625];
+const TH = {talk:[0,556000,3e6,10e6], ie:[0,5e6,25e6,100e6], ee:[0,1e6,5e6,20e6], ws:[0,500,2000,5000]};
+const TALK = [
+  {k:'voice', n:'סוכן קולי', u:'דקות', cr:1.00, cloud:0.04, h:'זימון ותזכורת תורים, מידע למטופל'},
+  {k:'chat', n:'סוכן צ׳אט', u:'שיחות', cr:0.50, cloud:0.01, h:'אתר, וואטסאפ, אפליקציה'},
+  {k:'tr', n:'תמלול ואנליזה', u:'דקות', cr:0.41, cloud:0.02, h:'שיחות המוקד האנושי'},
+  {k:'live', n:'Live Assist למוקדנים', u:'דקות', cr:0.50, cloud:0.03, h:'תשובות וצעדים הבאים בזמן השיחה'},
+  {k:'xl', n:'תרגום בזמן אמת', u:'דקות', cr:0.56, cloud:0.04, h:'ערבית, רוסית, אמהרית ועוד'}];
+const FDE = {S:100000, M:200000, L:300000}, UC_PCT = 0.5;
+const AWS = {S:2500, M:5000, L:9000}, CENTRAL = 12000, LLM = 2.24, TOK_WS = 0.5, TOK_RUN = 20, BILL = 0.02;
+const INCL = {ws:200, ie:10e6, env:4, fin:4};
+const PROFILE = {
+  S:{ws:450, voice:15000, chat:3000, tr:30000, live:10000, xl:3000, ie:20000, ee:5000, ucn:1},
+  M:{ws:1050, voice:40000, chat:8000, tr:80000, live:25000, xl:8000, ie:50000, ee:15000, ucn:1},
+  L:{ws:2400, voice:100000, chat:20000, tr:200000, live:60000, xl:20000, ie:120000, ee:40000, ucn:1}};
+const SIZE_HE = {S:'קטן', M:'בינוני', L:'גדול'};
+const PRESETS = {
+  'שמרני':{S:[1,1,2,3,3], M:[1,2,3,3,4], L:[1,1,2,3,4], h:'פיילוט קטן והצטרפות איטית'},
+  'בסיס':{S:[1,2,3,3,3], M:[1,3,4,4,4], L:[1,2,3,4,4], h:'בית חולים מכל גודל בפיילוט, הרחבה הדרגתית'},
+  'מהיר':{S:[3,3,3,3,3], M:[4,4,4,4,4], L:[4,4,4,4,4], h:'כל 11 בתי החולים מצטרפים בשנת הפיילוט'},
+  'מותאם':{S:[2,3,3,3,3], M:[2,3,4,4,4], L:[2,3,4,4,4], h:'ערכו את הטבלה לפי התרחיש שלכם'}};
+const MO = [6,12,12,12,12], MAT = [0.5,0.75,1,1.1,1.2], LIC = [0,1,1,1,1];
+
+const $ = s => document.querySelector(s);
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtK = n => n >= 1e6 ? '$' + (n/1e6).toFixed(n >= 1e7 ? 1 : 2) + 'M' : '$' + Math.round(n/1000).toLocaleString('en-US') + 'K';
+const num = n => Math.round(n).toLocaleString('en-US');
+const unit = (k, tier) => NET[k] * (1 - TIER[tier-1]);
+
+// ---------- state ----------
+const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, envin:false, tier:1, y1pct:50, essN:11, cenN:11, year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
+let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם']))};
+try { const v = JSON.parse(localStorage.getItem('jeen-calc')||'null'); if (v) S = {...S, ...v}; } catch(e) {}
+try { const v = JSON.parse(localStorage.getItem('jeen-net')||'null'); if (v) NETS = {...NETS, ...v}; } catch(e) {}
+const save = () => { try { localStorage.setItem('jeen-calc', JSON.stringify(S)); localStorage.setItem('jeen-net', JSON.stringify(NETS)); } catch(e) {} };
+
+// ---------- fields ----------
+function numField(id, label, unitTxt, hint, rateFn){
+  return `<div class="field"><label for="${id}">${label}</label>
+    <div class="inwrap"><button class="step" type="button" data-step="-1" data-for="${id}" aria-label="הפחתה">−</button>
+    <input id="${id}" inputmode="numeric" autocomplete="off" aria-describedby="${id}-r">
+    <button class="step" type="button" data-step="1" data-for="${id}" aria-label="הוספה">+</button>
+    <span class="unit">${unitTxt}</span></div>
+    <span class="rate" id="${id}-r">${hint}</span></div>`;
+}
+$('#talk-fields').innerHTML = TALK.map(t => numField(t.k, t.n, t.u + ' בחודש', t.h)).join('');
+$('#ws-fields').innerHTML = numField('ws', 'משתמשים פעילים בחודש', 'משתמשים', '');
+$('#ag-fields').innerHTML = numField('ie', 'הרצות סוכנים פנימיים', 'הרצות בחודש', 'סוכנים לצוות בית החולים') + numField('ee', 'הרצות סוכנים חיצוניים', 'הרצות בחודש', 'מול קופות חולים, ספקים ומטופלים');
+$('#set-fields').innerHTML = numField('ucn', 'Use Cases נוספים בכל שנה נוספת', 'Use Cases', '') + numField('essN', 'בתי חולים שחולקים בעלות Essentials', 'בתי חולים', 'חלוקה שווה. המערך קובע את החלוקה');
+const NUMK = ['ws','voice','chat','tr','live','xl','ie','ee','ucn','essN'];
+const STEPS = {ws:50, voice:1000, chat:500, tr:1000, live:1000, xl:500, ie:1000, ee:1000, ucn:1, essN:1};
+
+$('#tier').innerHTML = [1,2,3,4].map(t => `<button role="radio" data-tier="${t}" aria-checked="false">${t === 1 ? 'מחיר מלא' : 'מדרגה ' + t} <span class="num">${t>1 ? '−' + (TIER[t-1]*100) + '%' : ''}</span></button>`).join('');
+
+function syncInputs(){
+  NUMK.forEach(k => { const el = $('#'+k); if (document.activeElement !== el) el.value = num(S[k]); });
+  document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === S.size)));
+  $('#pilot').setAttribute('aria-checked', String(S.pilot));
+  $('#envin').setAttribute('aria-checked', String(S.envin));
+  document.querySelectorAll('#tier button').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.tier === S.tier)));
+  $('#tier-hint').textContent = S.tier === 1 ? 'מחיר מלא, לפני הנחות נפח. שמרני להצעה.' : `הנחת נפח של ${TIER[S.tier-1]*100}% כשהצריכה המצרפית של המערך מגיעה למדרגה ${S.tier}.`;
+  $('#y1pct').value = S.y1pct; $('#y1pct-v').textContent = S.y1pct + '%';
+  TALK.forEach(t => { $('#'+t.k+'-r').innerHTML = `${t.h} · <span class="num">${t.cr.toFixed(2)}</span> קרדיט ליחידה = <span class="num">$${(t.cr*unit('talk',S.tier)).toFixed(3)}</span>`; });
+  $('#ws-r').innerHTML = `<span class="num">$${unit('ws',S.tier).toFixed(2)}</span> למשתמש לחודש`;
+  $('#ie-r').innerHTML = `סוכנים לצוות · <span class="num">$${unit('ie',S.tier).toFixed(4)}</span> להרצה`;
+  $('#ee-r').innerHTML = `מול גורמים חיצוניים · <span class="num">$${unit('ee',S.tier).toFixed(4)}</span> להרצה`;
+  $('#ucn-r').innerHTML = `<span class="num">${fmt(FDE[S.size]*UC_PCT)}</span> ל-Use Case (50% מחבילת הפיילוט)`;
+  document.querySelectorAll('.ytabs button').forEach((b,i) => b.setAttribute('aria-selected', String(i+1 === S.year)));
+}
+
+// ---------- hospital calc ----------
+const COLORS = ['var(--c3)','var(--c1)','var(--c2)','var(--c8)','var(--c4)','var(--c5)','var(--c6)','var(--c7)'];
+function calcHospital(yr){
+  const pct = yr === 1 ? S.y1pct/100 : 1;
+  const licOn = yr === 1 ? (S.pilot ? 0 : 1) : 1;
+  const envPay = S.envin ? 0 : 1;
+  const credits = TALK.reduce((a,t) => a + S[t.k]*t.cr, 0);
+  const tcloud = TALK.reduce((a,t) => a + S[t.k]*t.cloud, 0);
+  const L = [
+    {n:'FDE · Use Case', d: yr === 1 ? 'חבילת פיילוט חד-פעמית' : `${S.ucn} Use Cases נוספים`, v: yr === 1 ? FDE[S.size] : FDE[S.size]*UC_PCT*S.ucn},
+    {n:'Jeen Talk', d:`${num(credits*12*pct)} Talk Credits בשנה`, v: credits*12*pct*unit('talk',S.tier)},
+    {n:'AI Workspace', d:`${num(S.ws)} משתמשים × 12 חודשים`, v: S.ws*12*pct*unit('ws',S.tier)},
+    {n:'Agent Builder', d:`${num((S.ie+S.ee)*12*pct)} הרצות בשנה`, v:(S.ie*unit('ie',S.tier)+S.ee*unit('ee',S.tier))*12*pct},
+    {n:'FinOps ו-Governance', d: yr === 2 && S.envin ? 'כלול ב-Essentials' : 'לבית חולים לשנה', v: yr === 1 ? NET.fin : NET.fin*envPay},
+    {n:'רישוי פלטפורמה', d: licOn === 0 ? 'פטור בשנת הפיילוט' : (S.envin ? `חלק ב-Essentials (1/${S.essN})` : `Environment + חלק ב-Essentials (1/${S.essN})`), v:(NET.env*envPay + NET.ess/Math.max(1,S.essN))*licOn, free: licOn === 0},
+    {n:'תשתית ענן · סביבה', d:'AWS בפועל + 2% · הערכה', v:(AWS[S.size] + CENTRAL/Math.max(1,S.cenN))*12*(1+BILL)},
+    {n:'תשתית ענן · מודלים', d:'STT/TTS/LLM לפי צריכה · הערכה', v:(tcloud + (S.ws*TOK_WS + (S.ie+S.ee)*TOK_RUN/1000)*LLM)*12*pct*(1+BILL)}];
+  return {lines:L, total:L.reduce((a,l) => a + l.v, 0)};
+}
+function renderHospital(){
+  const r = calcHospital(S.year);
+  $('#t-lbl').textContent = S.year === 1 ? 'עלות השנה הראשונה, לפני מע״מ' : 'עלות כל שנה נוספת, לפני מע״מ';
+  $('#t-big').textContent = fmt(r.total);
+  $('#t-sub').innerHTML = `בית חולים ${SIZE_HE[S.size]} · כ-<span class="num">${fmt(r.total/12)}</span> לחודש`;
+  $('#bar').innerHTML = r.lines.map((l,i) => l.v > 0 ? `<i style="width:${l.v/r.total*100}%;background:${COLORS[i]}"></i>` : '').join('');
+  $('#lines').innerHTML = r.lines.map((l,i) => `<li class="${l.v ? '' : 'zero'}"><span class="dot" style="background:${COLORS[i]}"></span>
+    <span class="nm">${l.n}${l.free ? '<span class="tag">חינם בפיילוט</span>' : ''}<small>${l.d}</small></span><span class="amt num">${fmt(l.v)}</span></li>`).join('');
+  $('#mb-l').textContent = S.year === 1 ? 'שנה ראשונה' : 'כל שנה נוספת';
+  $('#mb-v').textContent = fmt(r.total);
+}
+
+// events
+document.addEventListener('input', e => {
+  const id = e.target.id;
+  if (NUMK.includes(id)) { const v = parseInt(e.target.value.replace(/[^\d]/g,''),10); S[id] = isNaN(v) ? 0 : Math.max(id==='essN'?1:0, v); renderAll(false); }
+  if (id === 'y1pct') { S.y1pct = +e.target.value; renderAll(); }
+  if (QF[id]) { S[QF[id]] = id === 'q-valid' ? Math.max(1, parseInt(e.target.value.replace(/[^\d]/g,''),10) || 1) : e.target.value; save(); }
+});
+document.addEventListener('focusout', e => { if (NUMK.includes(e.target.id)) e.target.value = num(S[e.target.id]); });
+document.addEventListener('click', e => {
+  const st = e.target.closest('.step');
+  if (st) { const k = st.dataset.for; S[k] = Math.max(k==='essN'?1:0, S[k] + (+st.dataset.step)*STEPS[k]); renderAll(); return; }
+  const p = e.target.closest('.preset');
+  if (p) { S = {...S, size:p.dataset.preset, ...PROFILE[p.dataset.preset]}; renderAll(); return; }
+  const tb = e.target.closest('#tier button'); if (tb) { S.tier = +tb.dataset.tier; renderAll(); return; }
+  const sw = e.target.closest('.switch'); if (sw) { S[sw.id] = !S[sw.id]; renderAll(); return; }
+  const yt = e.target.closest('.ytabs button'); if (yt) { S.year = yt.id === 'y-1' ? 1 : 2; renderAll(); return; }
+  const sc = e.target.closest('#scn button'); if (sc) { NETS.scn = sc.dataset.scn; renderNet(); save(); return; }
+  const tab = e.target.closest('.tab'); if (tab) { showTab(tab.id.replace('tab-','')); return; }
+});
+document.addEventListener('keydown', e => {
+  const grp = e.target.closest('[role="radiogroup"],[role="tablist"]'); if (!grp || !['ArrowLeft','ArrowRight'].includes(e.key)) return;
+  const items = [...grp.querySelectorAll('button')]; const i = items.indexOf(e.target); if (i < 0) return;
+  const d = e.key === 'ArrowLeft' ? 1 : -1; const n = items[(i + d + items.length) % items.length]; n.focus(); n.click(); e.preventDefault();
+});
+$('#reset').addEventListener('click', () => { const q = {qName:S.qName, qTo:S.qTo, qDate:S.qDate, qValid:S.qValid}; S = {...DEF(), ...q}; renderAll(); toast('הנתונים אופסו'); });
+$('#copy').addEventListener('click', () => {
+  const y1 = calcHospital(1), y2 = calcHospital(2);
+  const txt = [`Jeen · תמחור לבית חולים ${SIZE_HE[S.size]}`, `${S.pilot ? 'מצטרף בשנת הפיילוט' : 'מצטרף לאחר שנת הפיילוט'} · ${S.tier === 1 ? 'מחיר מלא' : 'מדרגה ' + S.tier}`, '',
+    'שנה ראשונה:', ...y1.lines.map(l => `  ${l.n}: ${fmt(l.v)}`), `  סה״כ: ${fmt(y1.total)}`, '',
+    'כל שנה נוספת:', ...y2.lines.map(l => `  ${l.n}: ${fmt(l.v)}`), `  סה״כ: ${fmt(y2.total)}`, '', 'דולר, לפני מע״מ. תשתית הענן היא הערכה.'].join('\n');
+  const done = () => toast('הסיכום הועתק');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(() => fallbackCopy(txt)); else fallbackCopy(txt);
+});
+function fallbackCopy(t){ const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); let ok=false; try{ ok = document.execCommand('copy'); }catch(e){} ta.remove(); toast(ok ? 'הסיכום הועתק' : 'לא ניתן להעתיק בדפדפן הזה'); }
+let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, 1800); }
+
+// ---------- network ----------
+function graduated(vol, k){ const th = TH[k]; let s = 0; for (let i=0;i<4;i++){ const lo = th[i], hi = i<3 ? th[i+1] : Infinity; s += Math.max(0, Math.min(vol,hi)-lo) * NET[k]*(1-TIER[i]); } return s; }
+function rampFor(name){ return name === 'מותאם' ? NETS.custom : PRESETS[name]; }
+function calcNet(name){
+  const R = rampFor(name); const out = [];
+  for (let y=0;y<5;y++){
+    const h = {S:R.S[y], M:R.M[y], L:R.L[y]}, n = {}; ['S','M','L'].forEach(k => n[k] = y === 0 ? h[k] : Math.max(0, h[k]-R[k][y-1]));
+    const H = h.S+h.M+h.L;
+    const vol = (key, monthly) => ['S','M','L'].reduce((a,k) => a + h[k]*PROFILE[k][key], 0) * MAT[y] * (monthly ? 1 : MO[y]);
+    const credits = TALK.reduce((a,t) => a + vol(t.k)*t.cr, 0);
+    const ws = Math.round(vol('ws', true)), wsB = Math.max(0, ws - INCL.ws*LIC[y]);
+    const ie = vol('ie'), ieB = Math.max(0, ie - INCL.ie*LIC[y]*MO[y]/12), ee = vol('ee');
+    const fde = ['S','M','L'].reduce((a,k) => a + n[k]*FDE[k] + (h[k]-n[k])*FDE[k]*UC_PCT*PROFILE[k].ucn, 0);
+    const talk = graduated(credits,'talk'), wsr = graduated(wsB,'ws')*MO[y], agents = graduated(ieB,'ie') + graduated(ee,'ee');
+    const fin = Math.max(0, H - INCL.fin*LIC[y]) * NET.fin * MO[y]/12;
+    const lic = (NET.ess + Math.max(0, H - INCL.env)*NET.env) * LIC[y];
+    const aws = ((CENTRAL + ['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + (ws*TOK_WS*MO[y] + (ie+ee)*TOK_RUN/1000)*LLM)*(1+BILL);
+    const parts = {fde, talk, wsr, agents, fin, lic, aws}; const total = Object.values(parts).reduce((a,b) => a+b, 0);
+    out.push({H, parts, total, eTalk: credits ? talk/credits : 0, eWs: ws ? wsr/MO[y]/ws : 0});
+  }
+  return out;
+}
+const PARTS = [['fde','FDE · Use Cases','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['wsr','AI Workspace','var(--c2)'],['agents','Agent Builder','var(--c8)'],['fin','FinOps','var(--c4)'],['lic','רישוי','var(--c5)'],['aws','תשתית ענן + 2%','var(--c7)']];
+function renderNet(){
+  $('#scn').innerHTML = Object.keys(PRESETS).map(s => `<button role="radio" data-scn="${s}" aria-checked="${s === NETS.scn}">${s}</button>`).join('');
+  $('#scn-hint').textContent = PRESETS[NETS.scn].h;
+  const R = rampFor(NETS.scn), edit = NETS.scn === 'מותאם';
+  $('#ramp').innerHTML = `<caption class="sr" style="caption-side:top;text-align:start;padding:10px 14px;font-size:13px;color:var(--fg-3)">בתי חולים פעילים בסוף כל שנה (מצטבר)${edit ? ' · ניתן לעריכה' : ''}</caption>
+    <thead><tr><th>גודל</th>${[1,2,3,4,5].map(y => `<th class="n">שנה ${y}</th>`).join('')}</tr></thead><tbody>` +
+    ['S','M','L'].map(k => `<tr><td>${SIZE_HE[k]}</td>${R[k].map((v,y) => `<td class="n">${edit ? `<input aria-label="${SIZE_HE[k]} שנה ${y+1}" data-r="${k}" data-y="${y}" value="${v}" inputmode="numeric">` : v}</td>`).join('')}</tr>`).join('') +
+    `<tr class="tot"><td>סה״כ</td>${[0,1,2,3,4].map(y => `<td class="n">${R.S[y]+R.M[y]+R.L[y]}</td>`).join('')}</tr></tbody>`;
+  const res = calcNet(NETS.scn); const t5 = res.reduce((a,r) => a + r.total, 0);
+  $('#kpis').innerHTML = [['סה״כ 5 שנים', fmtK(t5)], ['שנה 1', fmtK(res[0].total)], ['שנה 5', fmtK(res[4].total)], ['ממוצע לבית חולים בשנה 5', fmtK(res[4].total/Math.max(1,res[4].H))]]
+    .map(([a,b]) => `<div class="kpi"><small>${a}</small><b class="num">${b}</b></div>`).join('');
+  // chart
+  const W = 720, Hh = 280, x0 = 56, y0 = 20, base = 240, bw = 72, gap = (W - x0 - 20 - 5*bw)/4;
+  const peak = Math.max(...res.map(r => r.total)) * 1.08; const Y = v => base - v/peak*(base-y0);
+  const ticks = 4; let g = '';
+  for (let i=0;i<=ticks;i++){ const v = peak/ticks*i, y = Y(v); g += `<line x1="${x0}" x2="${W-20}" y1="${y}" y2="${y}" stroke="var(--border)"/><text x="${x0-8}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--fg-3)" direction="ltr">${fmtK(v)}</text>`; }
+  res.forEach((r,i) => { const x = x0 + i*(bw+gap); let acc = 0;
+    PARTS.forEach(([k,n,c]) => { const v = r.parts[k]; if (v <= 0) return; const y1 = Y(acc+v), hgt = Y(acc)-y1; acc += v;
+      g += `<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(0,hgt-1)}" fill="${c}" rx="2"><title>שנה ${i+1} · ${n}: ${fmt(v)}</title></rect>`; });
+    g += `<text x="${x+bw/2}" y="${Y(r.total)-8}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--fg)" direction="ltr">${fmtK(r.total)}</text>`;
+    g += `<text x="${x+bw/2}" y="${base+20}" text-anchor="middle" font-size="12" fill="var(--fg-2)">שנה ${i+1}</text>`; });
+  $('#chart').innerHTML = g;
+  $('#legend').innerHTML = PARTS.map(([k,n,c]) => `<span><i style="background:${c}"></i>${n}</span>`).join('');
+  $('#nettbl').innerHTML = `<thead><tr><th>רכיב ($)</th>${[1,2,3,4,5].map(y => `<th class="n">שנה ${y}</th>`).join('')}<th class="n">סה״כ</th></tr></thead><tbody>` +
+    `<tr><td>בתי חולים פעילים</td>${res.map(r => `<td class="n">${r.H}</td>`).join('')}<td></td></tr>` +
+    PARTS.map(([k,n]) => `<tr><td>${n}</td>${res.map(r => `<td class="n">${num(r.parts[k])}</td>`).join('')}<td class="n">${num(res.reduce((a,r) => a + r.parts[k], 0))}</td></tr>`).join('') +
+    `<tr class="tot"><td>סה״כ למערך</td>${res.map(r => `<td class="n">${num(r.total)}</td>`).join('')}<td class="n">${num(t5)}</td></tr>` +
+    `<tr><td>מחיר ממוצע ל-Talk Credit</td>${res.map(r => `<td class="n">$${r.eTalk.toFixed(3)}</td>`).join('')}<td></td></tr>` +
+    `<tr><td>מחיר ממוצע למשתמש Workspace</td>${res.map(r => `<td class="n">$${r.eWs.toFixed(2)}</td>`).join('')}<td></td></tr></tbody>`;
+}
+document.addEventListener('change', e => { const el = e.target; if (el.dataset && el.dataset.r){ const v = Math.max(0, parseInt(el.value,10)||0); NETS.custom[el.dataset.r][+el.dataset.y] = v; renderNet(); save(); } });
+
+// ---------- price list ----------
+function renderPrice(){
+  const row = (a) => `<tr>${a.map((c,i) => `<td class="${i>1 ? 'n' : (i===1?'wrap':'')}">${c}</td>`).join('')}</tr>`;
+  const t1 = `<div class="tbl-wrap"><table><thead><tr><th>פריט</th><th>מה זה</th><th class="n">יחידה</th><th class="n">מחירון</th><th class="n">אחרי 30%</th></tr></thead><tbody>
+   ${row(['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט','$0.36','$0.252'])}
+   ${row(['AI Workspace','צ׳אט ארגוני ו-AI לצוות','למשתמש פעיל לחודש','$50','$35'])}
+   ${row(['Agent Builder · פנימי','הרצת סוכן לצוות','להרצה','$0.012','$0.0084'])}
+   ${row(['Agent Builder · חיצוני','הרצת סוכן מול גורם חיצוני','להרצה','$0.06','$0.042'])}
+   ${row(['FinOps ו-Governance','ניטור, בקרה, סינון PHI ותקציבים','לבית חולים לשנה','$14,400','$10,080'])}
+   ${row(['Enterprise Essentials','רישוי למערך, כולל 4 Environments ו-200 משתמשים','למערך לשנה','$360,000','$252,000'])}
+   ${row(['Environment','לכל בית חולים מהחמישי והלאה','לבית חולים לשנה','$50,000','$35,000'])}</tbody></table></div>`;
+  const t2 = `<div class="tbl-wrap"><table><thead><tr><th>סוכן Jeen Talk</th><th>שימוש</th><th class="n">יחידה</th><th class="n">קרדיטים</th><th class="n">מחיר מלא</th></tr></thead><tbody>
+   ${TALK.map(t => row([t.n, t.h, t.u === 'דקות' ? 'דקה' : 'שיחה', t.cr.toFixed(2), '$' + (t.cr*NET.talk).toFixed(3)])).join('')}</tbody></table></div>`;
+  const t3 = `<div class="tbl-wrap"><table><thead><tr><th>מדרגה</th><th class="n">הנחה</th><th class="n">Talk Credits בשנה</th><th class="n">הרצות פנימיות</th><th class="n">הרצות חיצוניות</th><th class="n">משתמשי Workspace</th></tr></thead><tbody>
+   ${[0,1,2,3].map(i => `<tr><td>מדרגה ${i+1}</td><td class="n">${i ? TIER[i]*100+'%' : '–'}</td>${['talk','ie','ee','ws'].map(k => `<td class="n">${i<3 ? (i ? 'מ-' : 'עד ') + num(i ? TH[k][i] : TH[k][1]) : 'מעל ' + num(TH[k][3])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  const t4 = `<div class="tbl-wrap"><table><thead><tr><th>רכיב</th><th class="n">קטן</th><th class="n">בינוני</th><th class="n">גדול</th></tr></thead><tbody>
+   <tr><td>פיילוט / Use Case ראשון · FDE</td><td class="n">$100,000</td><td class="n">$200,000</td><td class="n">$300,000</td></tr>
+   <tr><td>Use Case נוסף (50%)</td><td class="n">$50,000</td><td class="n">$100,000</td><td class="n">$150,000</td></tr>
+   <tr><td>סביבת ענן לחודש, כולל 2%</td><td class="n">$2,550</td><td class="n">$5,100</td><td class="n">$9,180</td></tr></tbody></table></div>`;
+  $('#pricecol').innerHTML = `<h2 class="sec-title">מחירי יחידה</h2>${t1}<h2 class="sec-title">צריכת Talk Credits לפי סוכן</h2>${t2}
+   <p class="note">קרדיט אחד שווה דקת סוכן קולי. שאר הסוכנים צורכים לפי היחס במחירון Jeen Talk. עלויות מודלי הדיבור והשפה מחויבות בנפרד לפי צריכה.</p>
+   <h2 class="sec-title">הנחות נפח</h2>${t3}<p class="note">ההנחה פרוגרסיבית ומחושבת על הצריכה השנתית של כל בתי החולים יחד. כל מדרגה מתומחרת בהנחה שלה.</p>
+   <h2 class="sec-title">FDE ותשתית</h2>${t4}
+   <h2 class="sec-title">רישוי</h2><p class="note"><b>שנת הפיילוט:</b> בתי חולים שמצטרפים בשנת הפיילוט פטורים מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות. Essentials כולל סביבות לארבעה בתי חולים; מהחמישי משלמים $35,000 לשנה על כל Environment.</p>`;
+}
+
+// ---------- export: quote (Word) + calculator (Excel) ----------
+const LOGO_B64 = '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';
+const DOCX_URL = 'https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.iife.js';
+const XLSX_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+const QF = {'q-name':'qName', 'q-to':'qTo', 'q-date':'qDate', 'q-valid':'qValid'};
+const libs = {};
+function loadLib(src){
+  if (!libs[src]) libs[src] = new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.async = true;
+    el.onload = res; el.onerror = () => { delete libs[src]; el.remove(); rej(new Error('lib')); }; document.head.appendChild(el); });
+  return libs[src];
+}
+let dlP = null;
+function downloadsNS(){ if (!dlP) dlP = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null); return dlP; }
+setTimeout(downloadsNS, 0);
+async function offerFile(filename, blob){
+  const dl = await downloadsNS();
+  if (dl) { await dl.save({filename, data: blob}); return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+}
+const b64bytes = b => Uint8Array.from(atob(b), c => c.charCodeAt(0));
+const dmy = iso => { const [y,m,d] = (iso || todayISO()).split('-'); return `${d}/${m}/${y}`; };
+const addDays = (iso, n) => { const d = new Date((iso || todayISO()) + 'T12:00:00'); d.setDate(d.getDate() + n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const safeName = t => t.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+function quoteData(){
+  const hosp = (S.qName || '').trim() || 'בית החולים';
+  const y1 = calcHospital(1), y2 = calcHospital(2);
+  const tierTxt = S.tier === 1 ? 'מחיר מלא (מדרגה 1)' : `מדרגה ${S.tier} · הנחת נפח של ${TIER[S.tier-1]*100}%`;
+  const usage = [
+    ...TALK.map(t => ({n:'Jeen Talk · ' + t.n, v:S[t.k], u:t.u === 'דקות' ? 'דקות' : 'שיחות', p:t.cr*unit('talk',S.tier), dp:3})),
+    {n:'AI Workspace · משתמשים פעילים', v:S.ws, u:'משתמשים', p:unit('ws',S.tier), dp:2},
+    {n:'Agent Builder · סוכנים פנימיים', v:S.ie, u:'הרצות', p:unit('ie',S.tier), dp:4},
+    {n:'Agent Builder · סוכנים חיצוניים', v:S.ee, u:'הרצות', p:unit('ee',S.tier), dp:4}];
+  const sets = [
+    ['גודל בית החולים', SIZE_HE[S.size]],
+    ['מועד ההצטרפות', S.pilot ? 'בשנת הפיילוט של המערך' : 'לאחר שנת הפיילוט של המערך'],
+    ['רישוי Environment', S.envin ? 'כלול ב-Enterprise Essentials של המערך' : '$35,000 לשנה'],
+    ['מדרגת המחיר', tierTxt],
+    ['היקף השימוש בשנה הראשונה', S.y1pct + '% מהשימוש השוטף'],
+    ['Use Cases נוספים בכל שנה נוספת', String(S.ucn)],
+    ['חלוקת Enterprise Essentials', `שווה בין ${S.essN} בתי חולים`]];
+  const years = [y1.total, y2.total, y2.total, y2.total, y2.total];
+  return {hosp, y1, y2, tierTxt, usage, sets, years, date:S.qDate || todayISO(), valid:addDays(S.qDate, +S.qValid || 30)};
+}
+
+// ---------- Word ----------
+async function buildDocx(){
+  await loadLib(DOCX_URL);
+  const {Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType, AlignmentType, Header,
+    ImageRun, BorderStyle, LevelFormat, PageBreak, VerticalAlign, HeadingLevel} = window.docx;
+  const Q = quoteData();
+  const FONT = 'Calibri', TEAL = '0F4761', LINE = 'DDE3E8', TOTAL = 'EDF2F6';
+  const ST = AlignmentType.START, CE = AlignmentType.CENTER;
+  const runs = (text, o = {}) => String(text).split(/(\*\*[^*]+\*\*)/).filter(Boolean).map(p => {
+    const b = o.bold || p.startsWith('**');
+    return new TextRun({text: p.startsWith('**') ? p.slice(2,-2) : p, bold:b, boldComplexScript:b, italics:o.italics, italicsComplexScript:o.italics,
+      size:o.size || 22, sizeComplexScript:o.size || 22, color:o.color, underline:o.underline ? {} : undefined, font:FONT, rightToLeft:true}); });
+  let afterH = false;
+  const P = (t, o = {}) => { const k = o.keepNext || afterH; afterH = false; return new Paragraph({bidirectional:true, alignment:o.align || ST, keepNext:k,
+    spacing:{after:o.after ?? 100, before:o.before ?? 0, line:276}, children:runs(t, o)}); };
+  const H1 = t => { afterH = true; return new Paragraph({heading:HeadingLevel.HEADING_1, bidirectional:true, alignment:ST, keepNext:true,
+    spacing:{before:360, after:200}, children:runs(t, {bold:true, size:28})}); };
+  const B = t => new Paragraph({bidirectional:true, alignment:ST, numbering:{reference:'bul', level:0}, spacing:{after:40, line:276}, children:runs(t)});
+  const NUM = t => new Paragraph({bidirectional:true, alignment:ST, numbering:{reference:'toc', level:0}, spacing:{after:20, line:276}, children:runs(t)});
+  const NOTE = t => P('* ' + t, {italics:true, size:19, after:60});
+  const GAP = () => P('', {after:60});
+  const none = {style:BorderStyle.NONE, size:0, color:'FFFFFF'};
+  const table = (widths, header, rows, o = {}) => {
+    const build = (arr, kind, last) => new TableRow({tableHeader:kind === 'h', cantSplit:true, children:arr.map((t, c) => new TableCell({
+      width:{size:widths[c], type:WidthType.DXA}, verticalAlign:VerticalAlign.CENTER, margins:{top:70, bottom:70, left:100, right:100},
+      borders:{left:none, right:none, top:kind === 't' ? {style:BorderStyle.SINGLE, size:8, color:TEAL} : none,
+        bottom:kind === 'h' ? {style:BorderStyle.SINGLE, size:8, color:TEAL} : {style:BorderStyle.SINGLE, size:4, color:LINE}},
+      shading:kind === 't' ? {type:ShadingType.CLEAR, fill:TOTAL, color:'auto'} : undefined,
+      children:[new Paragraph({bidirectional:true, alignment:c === 0 ? ST : CE, keepNext:!last, children:runs(t, {bold:kind !== 'r', size:21})})]}))});
+    const body = rows.map((r, i) => build(r, o.totalLast && i === rows.length-1 ? 't' : 'r', i === rows.length-1));
+    return new Table({width:{size:widths.reduce((a,b) => a+b, 0), type:WidthType.DXA}, columnWidths:widths, visuallyRightToLeft:true, rows:[build(header,'h'), ...body]});
+  };
+  const header = new Header({children:[new Paragraph({alignment:AlignmentType.LEFT,
+    children:[new ImageRun({type:'png', data:b64bytes(LOGO_B64), transformation:{width:77, height:30}})]})]});
+
+  const c = [];
+  c.push(new Paragraph({alignment:AlignmentType.LEFT, spacing:{after:360}, children:[new TextRun({text:dmy(Q.date), size:22, font:FONT})]}));
+  c.push(P('לכבוד', {after:0}));
+  if ((S.qTo || '').trim()) c.push(P('**' + S.qTo.trim() + '**', {after:0}));
+  c.push(P('**' + Q.hosp + '**', {after:300}));
+  c.push(P('שלום רב,', {after:360}));
+  c.push(P('**הצעת מחיר לשירותי Jeen AI ל' + Q.hosp + '**', {align:CE, size:32, after:360}));
+  c.push(P(`מערך בתי החולים הממשלתיים מתכבד להציע ל${Q.hosp} את פלטפורמת Jeen AI, כשירות מנוהל בסביבת ה-AI המרכזית של המערך בענן נימבוס (AWS). ההצעה כוללת את Jeen Talk – סוכני AI לשיחה עם המטופלים במוקדי בית החולים – ואת Jeen Enterprise לצוות, הטמעת Use Case על ידי צוות FDE, רישוי פלטפורמה ותשתית ענן. התמחור מבוסס על נתוני השימוש של בית החולים שמפורטים בהצעה.`, {after:200}));
+  c.push(P(S.pilot ? 'בית החולים מצטרף בשנת הפיילוט של המערך, ולכן פטור מרישוי פלטפורמה בשנה הראשונה.' : 'בית החולים מצטרף לאחר שנת הפיילוט של המערך, ולכן משלם רישוי פלטפורמה ממועד ההצטרפות.', {after:300}));
+  c.push(P('הצעת המחיר כוללת:', {underline:true, after:100}));
+  ['תכולת השירות', 'הנחות התמחור', 'נתוני השימוש ומחירי היחידה', 'עלות השנה הראשונה', 'עלות כל שנה נוספת', 'סיכום ל-5 שנים', 'תנאים כלליים'].forEach(t => c.push(NUM(t)));
+  c.push(P('', {after:900}));
+  c.push(P('בברכה,', {after:0}), P('מערך בתי החולים הממשלתיים'));
+  c.push(new Paragraph({children:[new PageBreak()]}));
+
+  c.push(H1('1. תכולת השירות'));
+  ['**Jeen Talk** – סוכני AI לשיחה עם המטופלים בטלפון, בצ׳אט, בוואטסאפ ובאתר: סוכנים קוליים וצ׳אט, תמלול ואנליזה של שיחות המוקד, Live Assist למוקדנים ותרגום בזמן אמת.',
+   '**AI Workspace** – צ׳אט ארגוני ו-AI לצוות מעל נהלים, פרוטוקולים ומסמכים. חיוב לפי משתמש פעיל בחודש.',
+   '**Agent Builder** – סוכני AI פנימיים לצוות, וסוכנים חיצוניים מול קופות חולים, ספקים ומטופלים. חיוב לפי הרצה.',
+   '**FinOps ו-Governance** – ניטור ובקרה, סינון מידע רפואי מזהה (PHI/PII), תקציבים והקצאת עלויות.',
+   '**FDE** – צוות Forward Deployed Engineers מטמיע את ה-Use Case הראשון ואת ה-Use Cases הנוספים.',
+   '**תשתית ענן מנוהלת** – סביבה מבודדת לבית החולים בסביבה המרכזית של המערך, כולל מודלי שפה ב-Amazon Bedrock באזור ישראל.'].forEach(t => c.push(B(t)));
+
+  c.push(H1('2. הנחות התמחור'));
+  c.push(table([3800, 5838], ['נושא', 'ערך'], Q.sets));
+
+  c.push(H1('3. נתוני השימוש ומחירי היחידה'));
+  c.push(P('נפח חודשי במצב שוטף. מחירי היחידה לפי ' + Q.tierTxt + '.'));
+  const monthly = Q.usage.reduce((a, u) => a + u.v*u.p, 0);
+  c.push(table([3438, 1500, 1300, 1600, 1800], ['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש'],
+    [...Q.usage.map(u => [u.n, num(u.v), u.u, '$' + u.p.toFixed(u.dp), fmt(u.v*u.p)]), ['סה״כ שימוש לחודש', '', '', '', fmt(monthly)]], {totalLast:true}));
+  c.push(GAP());
+  c.push(NOTE('Jeen Talk מחויב ב-Talk Credits לפי צריכת כל סוכן. עלויות מודלי הדיבור והשפה ותשתית הענן מחושבות בנפרד בסעיפים 4 ו-5.'));
+
+  const ytab = r => table([3000, 4638, 2000], ['רכיב', 'פירוט', 'עלות ($)'],
+    [...r.lines.map(l => [l.n, l.d, l.free ? 'ללא עלות' : num(l.v)]), ['סה״כ לשנה, לפני מע״מ', '', num(r.total)]], {totalLast:true});
+  c.push(H1('4. עלות השנה הראשונה'));
+  c.push(ytab(Q.y1));
+  c.push(GAP());
+  c.push(NOTE(`בשנה הראשונה השימוש מחושב לפי ${S.y1pct}% מהשימוש השוטף, בגלל ההקמה וההטמעה ההדרגתית. חבילת ה-FDE היא תשלום חד-פעמי.`));
+  c.push(H1('5. עלות כל שנה נוספת'));
+  c.push(ytab(Q.y2));
+  c.push(GAP());
+  c.push(NOTE('תשתית הענן היא הערכה. היא מחויבת לפי חשבון ה-AWS בפועל ועוד 2% דמי חיוב.'));
+
+  c.push(H1('6. סיכום ל-5 שנים'));
+  let acc = 0;
+  c.push(table([3238, 3200, 3200], ['שנה', 'עלות שנתית ($)', 'מצטבר ($)'],
+    [...Q.years.map((v, i) => { acc += v; return ['שנה ' + (i+1), num(v), num(acc)]; }), ['סה״כ 5 שנים', num(acc), '']], {totalLast:true}));
+  c.push(GAP());
+  c.push(NOTE('הסיכום מניח שימוש קבוע משנה 2 ומחירי יחידה קבועים. כשצריכת המערך כולו עולה, מחיר היחידה צפוי לרדת לפי מדרגות הנפח.'));
+
+  c.push(H1('7. תנאים כלליים'));
+  ['לכל המחירים בהצעה יתווסף מע"מ כחוק.',
+   'המחירים נקובים בדולר ארה״ב. החשבונית תופק בש״ח לפי שער הדולר היציג של בנק ישראל ביום הפקתה.',
+   'השימוש מחויב מדי חודש לפי צריכה בפועל, מהרגע שמשתמשים: Talk Credits לפי צריכת סוכני Jeen Talk, משתמש Workspace פעיל בחודש, והרצת סוכן.',
+   'היקף ה-Use Case מוגדר באפיון. עבודה מעבר להיקף שהוגדר תתומחר בנפרד ותאושר מראש ובכתב.',
+   'בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן מחויב ברישוי ממועד ההצטרפות.',
+   'עלויות תשתית הענן, כולל מודלי השפה, מחויבות לפי החשבון בפועל ועוד 2% דמי חיוב. ההערכות בהצעה אינן מחייבות.',
+   'הסכומים בהצעה הם אומדן לפי נתוני השימוש שבסעיף 3. החיוב בפועל הוא לפי השימוש בפועל ולפי מחירי היחידה בהצעה.',
+   'תוקף ההצעה: ' + dmy(Q.valid) + '.'].forEach((t, i) => c.push(P(`7.${i+1}  ${t}`, {after:60, keepNext:true})));
+  c.push(P('', {after:360}));
+  c.push(P('**הריני מאשר/ת את ההצעה על כל תנאיה בשם בית החולים:**', {after:200}));
+  ['שם בית החולים:', 'שם החותם ותפקידו:', 'חתימה וחותמת:', 'תאריך:'].forEach(t => c.push(P(`**${t}**   ______________________________`, {after:200})));
+
+  const doc = new Document({creator:'מערך בתי החולים הממשלתיים', title:'הצעת מחיר – ' + Q.hosp,
+    styles:{default:{document:{run:{font:FONT, size:22, sizeComplexScript:22, rightToLeft:true}, paragraph:{alignment:ST}}},
+      paragraphStyles:[{id:'Heading1', name:'Heading 1', basedOn:'Normal', next:'Normal', run:{font:FONT, size:28, bold:true, color:'000000'}, paragraph:{outlineLevel:0}}]},
+    numbering:{config:[
+      {reference:'bul', levels:[{level:0, format:LevelFormat.BULLET, text:'•', alignment:ST, style:{paragraph:{indent:{start:360, hanging:260}}}}]},
+      {reference:'toc', levels:[{level:0, format:LevelFormat.DECIMAL, text:'%1.', alignment:ST, style:{paragraph:{indent:{start:620, hanging:300}}}}]}]},
+    sections:[{properties:{page:{size:{width:11906, height:16838}, margin:{top:1600, bottom:1300, left:1134, right:1134, header:500}}},
+      headers:{default:header}, children:c}]});
+  return {blob: await Packer.toBlob(doc), name: safeName(`הצעת מחיר - ${Q.hosp} - ${dmy(Q.date).replace(/\//g,'.')}`) + '.docx'};
+}
+
+// ---------- Excel ----------
+async function buildXlsx(){
+  await loadLib(XLSX_URL);
+  const Q = quoteData(), X = window.ExcelJS;
+  const wb = new X.Workbook(); wb.creator = 'מערך בתי החולים הממשלתיים'; wb.calcProperties.fullCalcOnLoad = true;
+  const ws = wb.addWorksheet('הצעת מחיר', {views:[{rightToLeft:true, showGridLines:false}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, margins:{left:.5, right:.5, top:.6, bottom:.6, header:.3, footer:.3}}});
+  ws.columns = [{width:40}, {width:18}, {width:16}, {width:16}, {width:18}, {width:20}];
+  const F = 'Arial', INK = 'FF030712', MUTE = 'FF6B7280', VIO = 'FF7A7AFE', SOFT = 'FFF3F3FF', IN = 'FF4F4FBF', LN = 'FFE5E7EB';
+  const USD = '"$"#,##0', USD4 = '"$"#,##0.0000', PCT = '0%', INT = '#,##0';
+  const logo = wb.addImage({base64: 'data:image/png;base64,' + LOGO_B64, extension:'png'});
+  ws.addImage(logo, {tl:{col:4.6, row:0.25}, ext:{width:100, height:39}});
+  let r = 1;
+  const cell = (ref, v, o = {}) => { const c = ws.getCell(ref); c.value = v; c.font = {name:F, size:o.size || 11, bold:!!o.bold, italic:!!o.italic, color:{argb:o.color || INK}};
+    c.alignment = {horizontal:o.h || 'right', vertical:'middle', wrapText:!!o.wrap, readingOrder:'rtl'}; if (o.fmt) c.numFmt = o.fmt;
+    if (o.fill) c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:o.fill}}; if (o.border) c.border = {bottom:{style:'thin', color:{argb:LN}}}; return c; };
+  const f = (formula, result) => ({formula, result});
+  const inp = (ref, v, fmt) => { const c = cell(ref, v, {color:IN, bold:true, fill:SOFT, fmt, h:'center'}); c.border = {top:{style:'thin', color:{argb:'FFCFCFFE'}}, bottom:{style:'thin', color:{argb:'FFCFCFFE'}}, left:{style:'thin', color:{argb:'FFCFCFFE'}}, right:{style:'thin', color:{argb:'FFCFCFFE'}}}; return c; };
+  const head = (cols) => { cols.forEach((t, i) => cell(String.fromCharCode(65+i) + r, t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i ? 'center' : 'right', wrap:true})); ws.getRow(r).height = 22; r++; };
+  const sec = t => { r++; cell('A' + r, t, {bold:true, size:13}); ws.getRow(r).height = 22; r++; };
+
+  cell('A1', 'הצעת מחיר לשירותי Jeen AI', {bold:true, size:18}); ws.getRow(1).height = 30;
+  cell('A2', Q.hosp, {bold:true, size:13});
+  cell('A3', `מאת: מערך בתי החולים הממשלתיים · תאריך: ${dmy(Q.date)} · בתוקף עד: ${dmy(Q.valid)}`, {color:MUTE});
+  cell('A4', 'דולר ארה״ב, לפני מע״מ. התאים בסגול בהיר ניתנים לעריכה, והחישוב מתעדכן.', {color:MUTE, italic:true});
+  r = 5;
+
+  sec('הנחות התמחור');
+  const A = {};
+  const setRow = (key, label, v, fmt, note) => { cell('A' + r, label, {border:true}); inp('B' + r, v, fmt); if (note) cell('C' + r, note, {color:MUTE, size:10}); A[key] = '$B$' + r; r++; };
+  setRow('pilot', 'מצטרף בשנת הפיילוט של המערך', S.pilot ? 'כן' : 'לא', null, 'כן = פטור מרישוי בשנה הראשונה');
+  setRow('envin', 'Environment כלול ב-Enterprise Essentials', S.envin ? 'כן' : 'לא', null, 'נכון ל-4 בתי החולים הראשונים');
+  setRow('disc', 'הנחת נפח (מדרגת המחיר)', TIER[S.tier-1], PCT, '0%, 25%, 50% או 62.5%');
+  setRow('y1', 'היקף השימוש בשנה הראשונה', S.y1pct/100, PCT);
+  setRow('fde', `חבילת FDE לפיילוט (בית חולים ${SIZE_HE[S.size]})`, FDE[S.size], USD, 'חד-פעמי');
+  setRow('ucn', 'Use Cases נוספים בכל שנה נוספת', S.ucn, INT, '50% ממחיר החבילה ל-Use Case');
+  setRow('essN', 'בתי חולים שחולקים ב-Enterprise Essentials', S.essN, INT);
+  setRow('aws', 'סביבת ענן לבית החולים, לחודש (הערכה)', AWS[S.size], USD);
+  setRow('cenN', 'בתי חולים שחולקים בסביבה המרכזית', S.cenN, INT, 'סביבה מרכזית: $12,000 לחודש');
+  ['pilot','envin'].forEach(k => ws.getCell(A[k].replace(/\$/g,'')).dataValidation = {type:'list', allowBlank:false, formulae:['"כן,לא"']});
+
+  sec('נתוני שימוש לחודש');
+  head(['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש', 'מודלים לחודש · הערכה']);
+  const u0 = r; const disc = 1 - TIER[S.tier-1];
+  const urow = (name, v, unitTxt, base, bv, cloudF, cloudV) => {
+    cell('A' + r, name, {border:true}); inp('B' + r, v, INT); cell('C' + r, unitTxt, {h:'center', border:true, color:MUTE});
+    cell('D' + r, f(`${base}*(1-${A.disc})`, +(bv*disc).toFixed(6)), {fmt:USD4, h:'center', border:true});
+    cell('E' + r, f(`B${r}*D${r}`, v*bv*disc), {fmt:USD, h:'center', border:true});
+    cell('F' + r, f(cloudF.replace(/B#/g, 'B' + r), cloudV), {fmt:USD, h:'center', border:true, color:MUTE}); r++; };
+  TALK.forEach(t => urow('Jeen Talk · ' + t.n, S[t.k], t.u === 'דקות' ? 'דקות' : 'שיחות', `${t.cr}*0.252`, t.cr*0.252, `B#*${t.cloud}`, S[t.k]*t.cloud));
+  const tEnd = r - 1;
+  urow('AI Workspace · משתמשים פעילים', S.ws, 'משתמשים', '35', 35, 'B#*0.5*2.24', S.ws*TOK_WS*LLM); const wsR = r - 1;
+  urow('Agent Builder · סוכנים פנימיים', S.ie, 'הרצות', '0.0084', 0.0084, 'B#*20/1000*2.24', S.ie*TOK_RUN/1000*LLM); const ieR = r - 1;
+  urow('Agent Builder · סוכנים חיצוניים', S.ee, 'הרצות', '0.042', 0.042, 'B#*20/1000*2.24', S.ee*TOK_RUN/1000*LLM); const eeR = r - 1;
+  const monthly = Q.usage.reduce((a, u) => a + u.v*u.p, 0);
+  const cloudM = TALK.reduce((a,t) => a + S[t.k]*t.cloud, 0) + (S.ws*TOK_WS + (S.ie+S.ee)*TOK_RUN/1000)*LLM;
+  cell('A' + r, 'סה״כ לחודש', {bold:true, fill:SOFT}); ['B','C','D'].forEach(k => cell(k + r, '', {fill:SOFT}));
+  cell('E' + r, f(`SUM(E${u0}:E${r-1})`, monthly), {bold:true, fmt:USD, h:'center', fill:SOFT});
+  cell('F' + r, f(`SUM(F${u0}:F${r-1})`, cloudM), {bold:true, fmt:USD, h:'center', fill:SOFT}); const uTot = r; r++;
+
+  sec('עלות שנתית');
+  head(['רכיב', 'פירוט', 'שנה ראשונה', 'כל שנה נוספת']);
+  const c0 = r; const L1 = Q.y1.lines, L2 = Q.y2.lines;
+  const crow = (i, f1, f2) => { cell('A' + r, L1[i].n, {border:true}); cell('B' + r, L1[i].d.replace(/ · הערכה$/,''), {color:MUTE, size:10, border:true});
+    cell('C' + r, f(f1, L1[i].v), {fmt:USD, h:'center', border:true}); cell('D' + r, f(f2, L2[i].v), {fmt:USD, h:'center', border:true}); r++; };
+  const lic = `(IF(${A.envin}="כן",0,35000)+252000/MAX(1,${A.essN}))`;
+  crow(0, `${A.fde}`, `${A.fde}*0.5*${A.ucn}`);
+  crow(1, `SUM(E${u0}:E${tEnd})*12*${A.y1}`, `SUM(E${u0}:E${tEnd})*12`);
+  crow(2, `E${wsR}*12*${A.y1}`, `E${wsR}*12`);
+  crow(3, `(E${ieR}+E${eeR})*12*${A.y1}`, `(E${ieR}+E${eeR})*12`);
+  crow(4, '10080', `IF(${A.envin}="כן",0,10080)`);
+  crow(5, `IF(${A.pilot}="כן",0,1)*${lic}`, lic);
+  crow(6, `(${A.aws}+12000/MAX(1,${A.cenN}))*12*1.02`, `(${A.aws}+12000/MAX(1,${A.cenN}))*12*1.02`);
+  crow(7, `F${uTot}*12*${A.y1}*1.02`, `F${uTot}*12*1.02`);
+  cell('A' + r, 'סה״כ לשנה, לפני מע״מ', {bold:true, fill:SOFT}); cell('B' + r, '', {fill:SOFT});
+  cell('C' + r, f(`SUM(C${c0}:C${r-1})`, Q.y1.total), {bold:true, fmt:USD, h:'center', fill:SOFT});
+  cell('D' + r, f(`SUM(D${c0}:D${r-1})`, Q.y2.total), {bold:true, fmt:USD, h:'center', fill:SOFT}); const yTot = r; r++;
+
+  sec('סיכום ל-5 שנים');
+  head(['שנה', 'עלות שנתית', 'מצטבר']);
+  const s0 = r; let acc = 0;
+  Q.years.forEach((v, i) => { acc += v; cell('A' + r, 'שנה ' + (i+1), {border:true});
+    cell('B' + r, f(i ? `$D$${yTot}` : `$C$${yTot}`, v), {fmt:USD, h:'center', border:true});
+    cell('C' + r, f(i ? `C${r-1}+B${r}` : `B${r}`, acc), {fmt:USD, h:'center', border:true}); r++; });
+  cell('A' + r, 'סה״כ 5 שנים', {bold:true, fill:SOFT}); cell('B' + r, f(`SUM(B${s0}:B${r-1})`, acc), {bold:true, fmt:USD, h:'center', fill:SOFT}); cell('C' + r, '', {fill:SOFT}); r += 2;
+
+  ['תשתית הענן היא הערכה, ומחויבת לפי חשבון ה-AWS בפועל ועוד 2% דמי חיוב.',
+   'החיוב בפועל הוא לפי השימוש בפועל. מחירי היחידה עשויים לרדת לפי מדרגות הנפח של המערך כולו.',
+   'בית חולים שמצטרף בשנת הפיילוט פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות.']
+    .forEach(t => { cell('A' + r, '* ' + t, {color:MUTE, size:10, italic:true}); r++; });
+
+  // price list sheet
+  const pl = wb.addWorksheet('מחירון', {views:[{rightToLeft:true, showGridLines:false}]});
+  pl.columns = [{width:30}, {width:44}, {width:20}, {width:16}, {width:16}];
+  const pc = (ref, v, o = {}) => { const c = pl.getCell(ref); c.value = v; c.font = {name:F, size:o.size || 11, bold:!!o.bold, color:{argb:o.color || INK}};
+    c.alignment = {horizontal:o.h || 'right', vertical:'middle', wrapText:true, readingOrder:'rtl'}; if (o.fill) c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:o.fill}};
+    if (o.fmt) c.numFmt = o.fmt; c.border = {bottom:{style:'thin', color:{argb:LN}}}; };
+  pc('A1', 'מחירון יחידות · אחרי הנחת נימבוס של 30%', {bold:true, size:14});
+  ['פריט','תיאור','יחידה','מחירון','אחרי 30%'].forEach((t, i) => pc(String.fromCharCode(65+i) + '3', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
+  [['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט',0.36,0.252,USD4],['AI Workspace','משתמש פעיל','למשתמש לחודש',50,35,USD],
+   ['Agent Builder · פנימי','הרצת סוכן לצוות','להרצה',0.012,0.0084,USD4],['Agent Builder · חיצוני','הרצת סוכן מול גורם חיצוני','להרצה',0.06,0.042,USD4],
+   ['FinOps ו-Governance','ניטור, בקרה, סינון PHI ותקציבים','לבית חולים לשנה',14400,10080,USD],['Enterprise Essentials','רישוי למערך, כולל 4 Environments','למערך לשנה',360000,252000,USD],
+   ['Environment','לכל בית חולים מהחמישי והלאה','לבית חולים לשנה',50000,35000,USD],['חבילת FDE · קטן / בינוני / גדול','פיילוט / Use Case ראשון, חד-פעמי','לבית חולים','','$100K / $200K / $300K',null]]
+    .forEach((row, i) => row.slice(0,5).forEach((v, j) => pc(String.fromCharCode(65+j) + (4+i), v, {h:j > 1 ? 'center' : 'right', fmt:j > 2 ? row[5] : null})));
+  pc('A13', 'צריכת Talk Credits לפי סוכן', {bold:true, size:13});
+  ['סוכן','שימוש','יחידה','קרדיטים ליחידה','מחיר מלא'].forEach((t, i) => pc(String.fromCharCode(65+i) + '14', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
+  TALK.forEach((t, i) => [t.n, t.h, t.u === 'דקות' ? 'דקה' : 'שיחה', t.cr, t.cr*0.252].forEach((v, j) => pc(String.fromCharCode(65+j) + (15+i), v, {h:j > 1 ? 'center' : 'right', fmt:j === 3 ? '0.00' : j === 4 ? '"$"0.000' : null})));
+  pc('A21', 'מדרגות הנחת נפח (על הצריכה השנתית של כל המערך)', {bold:true, size:13});
+  ['מדרגה','הנחה','Talk Credits בשנה','הרצות פנימיות','משתמשי Workspace'].forEach((t, i) => pc(String.fromCharCode(65+i) + '22', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i ? 'center' : 'right'}));
+  [0,1,2,3].forEach(i => ['מדרגה ' + (i+1), TIER[i], ...['talk','ie','ws'].map(k => i < 3 ? (i ? num(TH[k][i]) + ' עד ' + num(TH[k][i+1]) : 'עד ' + num(TH[k][1])) : 'מעל ' + num(TH[k][3]))]
+    .forEach((v, j) => pc(String.fromCharCode(65+j) + (23+i), v, {h:j ? 'center' : 'right', fmt:j === 1 ? '0.0%' : null})));
+
+  const buf = await wb.xlsx.writeBuffer();
+  return {blob: new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),
+    name: safeName(`מחשבון הצעת מחיר - ${Q.hosp} - ${dmy(Q.date).replace(/\//g,'.')}`) + '.xlsx'};
+}
+
+async function runExport(btn, builder, label){
+  const st = $('#exp-status'); if (btn.getAttribute('aria-busy') === 'true') return;
+  btn.setAttribute('aria-busy', 'true'); st.className = 'exp-status'; st.textContent = `מכין את ${label}…`;
+  try {
+    const {blob, name} = await builder();
+    await offerFile(name, blob);
+    st.className = 'exp-status ok'; st.textContent = `${label} מוכן: ${name}`;
+  } catch (e) {
+    const code = e && e.code;
+    st.className = 'exp-status err';
+    st.textContent = code === 'declined' ? 'ההורדה בוטלה.' : code === 'rate_limited' ? 'יש כבר בקשת הורדה פתוחה. נסו שוב בעוד רגע.'
+      : (e && e.message === 'lib') ? 'לא הצלחנו לטעון את רכיב הייצוא. בדקו את החיבור לאינטרנט ונסו שוב.' : 'לא הצלחנו להפיק את הקובץ. נסו שוב.';
+  } finally { btn.setAttribute('aria-busy', 'false'); }
+}
+$('#exp-docx').addEventListener('click', e => runExport(e.currentTarget, buildDocx, 'מסמך הצעת המחיר'));
+$('#exp-xlsx').addEventListener('click', e => runExport(e.currentTarget, buildXlsx, 'קובץ האקסל'));
+$('#go-exp').addEventListener('click', e => { e.preventDefault(); const el = $('#export'); el.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'}); el.focus({preventScroll:true}); setTimeout(() => $('#q-name').focus({preventScroll:true}), 350); });
+function syncQuote(){ Object.entries(QF).forEach(([id, k]) => { const el = $('#' + id); if (document.activeElement !== el) el.value = S[k] ?? ''; }); }
+syncQuote();
+
+// ---------- tabs ----------
+function showTab(name){
+  ['calc','net','price'].forEach(n => { $('#v-'+n).hidden = n !== name; $('#tab-'+n).setAttribute('aria-selected', String(n === name)); });
+  $('#mbar').style.visibility = name === 'calc' ? 'visible' : 'hidden';
+  if (name === 'net') renderNet();
+}
+function renderAll(sync = true){ if (sync) syncInputs(); else { document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === S.size))); }
+  syncInputs(); renderHospital(); save(); }
+const h0 = (location.hash||'').slice(1); renderPrice(); renderAll(); renderNet(); showTab(['net','price'].includes(h0) ? h0 : 'calc');
+window.addEventListener('hashchange', () => { const h = location.hash.slice(1); showTab(['net','price'].includes(h) ? h : 'calc'); });
+})();
+</script>
+</body>
+</html>
