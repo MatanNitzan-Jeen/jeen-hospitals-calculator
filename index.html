@@ -233,6 +233,15 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
       </div>
 
       <div class="card">
+        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6M21 20a6 6 0 0 0-4-5.6"/></svg></div>
+          <div><h2>FDE · שירותי הטמעה לפי עבודה בפועל</h2><p>חיוב לפי שעות בפועל של בעלי התפקידים שכל Use Case צריך. תעריף בש״ח לשעה, לפני מע״מ.</p></div></div>
+        <div class="grid2" id="uc-fields"></div>
+        <span class="flabel">שעות לכל Use Case, לפי בעל תפקיד</span>
+        <div class="grid2" id="role-fields"></div>
+        <p class="note" id="fde-sum"></p>
+      </div>
+
+      <div class="card">
         <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></div>
           <div><h2>Jeen Talk · מוקדים ושיחות עם מטופלים</h2><p>נפח חודשי במצב שוטף. החיוב ב-Talk Credits.</p></div></div>
         <div class="grid2" id="talk-fields"></div>
@@ -367,14 +376,24 @@ const TALK = [
   {k:'tr', n:'תמלול ואנליזה', u:'דקות', cr:0.41, cloud:0.02, h:'שיחות המוקד האנושי'},
   {k:'live', n:'Live Assist למוקדנים', u:'דקות', cr:0.50, cloud:0.03, h:'תשובות וצעדים הבאים בזמן השיחה'},
   {k:'xl', n:'תרגום בזמן אמת', u:'דקות', cr:0.56, cloud:0.04, h:'ערבית, רוסית, אמהרית ועוד'}];
-const FDE = {S:100000, M:200000, L:300000}, UC_PCT = 0.5;
+const ROLES = [
+  {k:'h_devops', n:'DevOps', rate:500}, {k:'h_arch', n:'ארכיטקט', rate:600},
+  {k:'h_ai', n:'מיישם AI / מהנדס פרומפטים / מפתח סוכנים', rate:450}, {k:'h_pm', n:'מנהל פרויקט טכני', rate:500},
+  {k:'h_sa', n:'מנתח מערכות ונתונים', rate:500}, {k:'h_fs', n:'מפתח Full Stack', rate:600},
+  {k:'h_fin', n:'מומחה AI לעולמות הפיננסים', rate:600}, {k:'h_pmgr', n:'מנהל מוצר בכיר / מנהל פיתוח בכיר', rate:700},
+  {k:'h_res', n:'חוקר AI / ML בכיר', rate:1000}, {k:'h_str', n:'מומחה אסטרטגיית אימוץ והטמעת AI בארגונים', rate:1500}];
+const HOURS_M = {h_devops:80, h_arch:60, h_ai:400, h_pm:160, h_sa:120, h_fs:160, h_fin:0, h_pmgr:0, h_res:0, h_str:16};
+const SIZE_MULT = {S:0.6, M:1, L:1.4}, FX_DEF = 3.06;
+const hoursFor = k => Object.fromEntries(ROLES.map(r => [r.k, Math.round(HOURS_M[r.k]*SIZE_MULT[k]/4)*4]));
+const ucILS = h => ROLES.reduce((a,r) => a + (h[r.k]||0)*r.rate, 0);
+const ucHours = h => ROLES.reduce((a,r) => a + (h[r.k]||0), 0);
 const AWS = {S:2500, M:5000, L:9000}, CENTRAL = 12000, LLM = 2.24, TOK_WS = 0.5, BILL = 0.02;
 const SITE = {S:100000, M:200000, L:300000}, AGENT_RATE = 5;
 const SITE_INCL = 'Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון';
 const PROFILE = {
-  S:{ws:450, voice:15000, chat:3000, tr:30000, live:10000, xl:3000, tok:500, ucn:1},
-  M:{ws:1050, voice:40000, chat:8000, tr:80000, live:25000, xl:8000, tok:1300, ucn:1},
-  L:{ws:2400, voice:100000, chat:20000, tr:200000, live:60000, xl:20000, tok:3200, ucn:1}};
+  S:{ws:450, voice:15000, chat:3000, tr:30000, live:10000, xl:3000, tok:500, ucn:1, uc1:1, ...hoursFor('S')},
+  M:{ws:1050, voice:40000, chat:8000, tr:80000, live:25000, xl:8000, tok:1300, ucn:1, uc1:1, ...hoursFor('M')},
+  L:{ws:2400, voice:100000, chat:20000, tr:200000, live:60000, xl:20000, tok:3200, ucn:1, uc1:1, ...hoursFor('L')}};
 const SIZE_HE = {S:'קטן', M:'בינוני', L:'גדול'};
 const PRESETS = {
   'שמרני':{S:[1,1,2,3,3], M:[1,2,3,3,4], L:[1,1,2,3,4], h:'פיילוט קטן והצטרפות איטית'},
@@ -391,7 +410,7 @@ const unit = (k, tier) => NET[k] * (1 - TIER[tier-1]);
 
 // ---------- state ----------
 const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, tier:1, y1pct:50, cenN:11, year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
+const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, tier:1, y1pct:50, cenN:11, fx:FX_DEF, year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
 let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם']))};
 // Every page load starts a fresh quote: nothing is kept between visits.
 try { localStorage.removeItem('jeen-calc'); localStorage.removeItem('jeen-net'); } catch(e) {}
@@ -409,14 +428,16 @@ function numField(id, label, unitTxt, hint, rateFn){
 $('#talk-fields').innerHTML = TALK.map(t => numField(t.k, t.n, t.u + ' בחודש', t.h)).join('');
 $('#ws-fields').innerHTML = numField('ws', 'משתמשים פעילים בחודש', 'משתמשים', 'משמש רק להערכת צריכת המודלים בענן');
 $('#ag-fields').innerHTML = numField('tok', 'טוקנים של סוכני אוטומציה בחודש', 'מיליון טוקנים', '');
-$('#set-fields').innerHTML = numField('ucn', 'Use Cases נוספים בכל שנה נוספת', 'Use Cases', '');
-const NUMK = ['ws','voice','chat','tr','live','xl','tok','ucn'];
-const STEPS = {ws:50, voice:1000, chat:500, tr:1000, live:1000, xl:500, tok:50, ucn:1};
+$('#set-fields').innerHTML = numField('fx', 'שער הדולר לחישוב FDE', '₪ לדולר', 'השירותים מחויבים בש״ח. השער משמש רק להצגה בדולר');
+$('#uc-fields').innerHTML = numField('uc1', 'Use Cases בשנה הראשונה', 'Use Cases', 'כולל ה-Use Case של הפיילוט') + numField('ucn', 'Use Cases בכל שנה נוספת', 'Use Cases', '');
+$('#role-fields').innerHTML = ROLES.map(r => numField(r.k, r.n, 'שעות', '')).join('');
+const NUMK = ['ws','voice','chat','tr','live','xl','tok','uc1','ucn','fx', ...ROLES.map(r => r.k)];
+const STEPS = {ws:50, voice:1000, chat:500, tr:1000, live:1000, xl:500, tok:50, uc1:1, ucn:1, fx:0.05, ...Object.fromEntries(ROLES.map(r => [r.k, 8]))};
 
 $('#tier').innerHTML = [1,2,3,4].map(t => `<button role="radio" data-tier="${t}" aria-checked="false">${t === 1 ? 'מחיר מלא' : 'מדרגה ' + t} <span class="num">${t>1 ? '−' + (TIER[t-1]*100) + '%' : ''}</span></button>`).join('');
 
 function syncInputs(){
-  NUMK.forEach(k => { const el = $('#'+k); if (document.activeElement !== el) el.value = num(S[k]); });
+  NUMK.forEach(k => { const el = $('#'+k); if (document.activeElement !== el) el.value = k === 'fx' ? S.fx.toFixed(2) : num(S[k]); });
   document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === S.size)));
   $('#pilot').setAttribute('aria-checked', String(S.pilot));
   $('#site-note').innerHTML = `<b>רישוי אתר (Site License):</b> <span class="num">${fmt(SITE[S.size])}</span> לשנה לבית חולים ${SIZE_HE[S.size]}, ${S.pilot ? 'החל מהשנה השנייה' : 'ממועד ההצטרפות'}. כולל ${SITE_INCL}.`;
@@ -425,7 +446,9 @@ function syncInputs(){
   $('#y1pct').value = S.y1pct; $('#y1pct-v').textContent = S.y1pct + '%';
   TALK.forEach(t => { $('#'+t.k+'-r').innerHTML = `${t.h} · <span class="num">${t.cr.toFixed(2)}</span> קרדיט ליחידה = <span class="num">$${(t.cr*unit('talk',S.tier)).toFixed(3)}</span>`; });
   $('#tok-r').innerHTML = `<span class="num">$${AGENT_RATE.toFixed(2)}</span> למיליון טוקנים · Flows ארגוניים כמו קליטת הפניות, תיאום תורים והפקת דוחות. סוכן אישי בצ׳אט לא מחויב בטוקנים`;
-  $('#ucn-r').innerHTML = `<span class="num">${fmt(FDE[S.size]*UC_PCT)}</span> ל-Use Case (50% מחבילת הפיילוט)`;
+  ROLES.forEach(r => { $('#'+r.k+'-r').innerHTML = `<span class="num">₪${r.rate.toLocaleString('en-US')}</span> לשעה · <span class="num">₪${num((S[r.k]||0)*r.rate)}</span> ל-Use Case`; });
+  const ils = ucILS(S), hrs = ucHours(S);
+  $('#fde-sum').innerHTML = `<b>ל-Use Case:</b> <span class="num">${num(hrs)}</span> שעות · <span class="num">₪${num(ils)}</span> · כ-<span class="num">${fmt(ils/S.fx)}</span>. החיוב לפי השעות בפועל, וההיקף נקבע באפיון של כל Use Case.`;
   document.querySelectorAll('.ytabs button').forEach((b,i) => b.setAttribute('aria-selected', String(i+1 === S.year)));
 }
 
@@ -437,7 +460,7 @@ function calcHospital(yr){
   const credits = TALK.reduce((a,t) => a + S[t.k]*t.cr, 0);
   const tcloud = TALK.reduce((a,t) => a + S[t.k]*t.cloud, 0);
   const L = [
-    {n:'FDE · Use Case', d: yr === 1 ? 'חבילת פיילוט חד-פעמית' : `${S.ucn} Use Cases נוספים`, v: yr === 1 ? FDE[S.size] : FDE[S.size]*UC_PCT*S.ucn},
+    {n:'FDE · שעות עבודה', d: `${yr === 1 ? S.uc1 : S.ucn} Use Case${(yr === 1 ? S.uc1 : S.ucn) === 1 ? '' : 's'} · ${num((yr === 1 ? S.uc1 : S.ucn)*ucHours(S))} שעות`, v: (yr === 1 ? S.uc1 : S.ucn)*ucILS(S)/S.fx},
     {n:'Jeen Talk', d:`${num(credits*12*pct)} Talk Credits בשנה`, v: credits*12*pct*unit('talk',S.tier)},
     {n:'Jeen Agents · אוטומציות', d:`${num(S.tok*12*pct)} מיליון טוקנים בשנה`, v: S.tok*12*pct*AGENT_RATE},
     {n:'רישוי אתר', d: licOn === 0 ? 'פטור בשנת הפיילוט' : 'Workspace, Agents, RAG, Admin, Governance ו-FinOps', v: SITE[S.size]*licOn, free: licOn === 0},
@@ -460,14 +483,14 @@ function renderHospital(){
 // events
 document.addEventListener('input', e => {
   const id = e.target.id;
-  if (NUMK.includes(id)) { const v = parseInt(e.target.value.replace(/[^\d]/g,''),10); S[id] = isNaN(v) ? 0 : Math.max(0, v); renderAll(false); }
+  if (NUMK.includes(id)) { const v = id === 'fx' ? parseFloat(e.target.value.replace(/[^\d.]/g,'')) : parseInt(e.target.value.replace(/[^\d]/g,''),10); S[id] = isNaN(v) ? 0 : Math.max(0, v); if (id === 'fx' && S.fx < 0.5) return; renderAll(false); }
   if (id === 'y1pct') { S.y1pct = +e.target.value; renderAll(); }
   if (QF[id]) { S[QF[id]] = id === 'q-valid' ? Math.max(1, parseInt(e.target.value.replace(/[^\d]/g,''),10) || 1) : e.target.value; save(); }
 });
-document.addEventListener('focusout', e => { if (NUMK.includes(e.target.id)) e.target.value = num(S[e.target.id]); });
+document.addEventListener('focusout', e => { const k = e.target.id; if (!NUMK.includes(k)) return; if (k === 'fx' && !(S.fx >= 0.5)) { S.fx = FX_DEF; renderAll(); } e.target.value = k === 'fx' ? S.fx.toFixed(2) : num(S[k]); });
 document.addEventListener('click', e => {
   const st = e.target.closest('.step');
-  if (st) { const k = st.dataset.for; S[k] = Math.max(0, S[k] + (+st.dataset.step)*STEPS[k]); renderAll(); return; }
+  if (st) { const k = st.dataset.for; S[k] = Math.max(k === 'fx' ? 0.5 : 0, Math.round((S[k] + (+st.dataset.step)*STEPS[k])*100)/100); renderAll(); return; }
   const p = e.target.closest('.preset');
   if (p) { S = {...S, size:p.dataset.preset, ...PROFILE[p.dataset.preset]}; renderAll(); return; }
   const tb = e.target.closest('#tier button'); if (tb) { S.tier = +tb.dataset.tier; renderAll(); return; }
@@ -504,7 +527,7 @@ function calcNet(name){
     const vol = (key, monthly) => ['S','M','L'].reduce((a,k) => a + h[k]*PROFILE[k][key], 0) * MAT[y] * (monthly ? 1 : MO[y]);
     const credits = TALK.reduce((a,t) => a + vol(t.k)*t.cr, 0);
     const ws = Math.round(vol('ws', true)), tok = vol('tok');
-    const fde = ['S','M','L'].reduce((a,k) => a + n[k]*FDE[k] + (h[k]-n[k])*FDE[k]*UC_PCT*PROFILE[k].ucn, 0);
+    const fde = ['S','M','L'].reduce((a,k) => a + (n[k]*PROFILE[k].uc1 + (h[k]-n[k])*PROFILE[k].ucn) * ucILS(PROFILE[k]) / S.fx, 0);
     const talk = graduated(credits,'talk'), agents = tok*AGENT_RATE;
     const lic = ['S','M','L'].reduce((a,k) => a + h[k]*SITE[k], 0) * LIC[y];
     const aws = ((CENTRAL + ['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + ws*TOK_WS*MO[y]*LLM)*(1+BILL);
@@ -513,7 +536,7 @@ function calcNet(name){
   }
   return out;
 }
-const PARTS = [['fde','FDE · Use Cases','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['lic','רישוי אתר','var(--c5)'],['agents','Jeen Agents · טוקנים','var(--c8)'],['aws','תשתית ענן + 2%','var(--c7)']];
+const PARTS = [['fde','FDE · שעות עבודה','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['lic','רישוי אתר','var(--c5)'],['agents','Jeen Agents · טוקנים','var(--c8)'],['aws','תשתית ענן + 2%','var(--c7)']];
 function renderNet(){
   $('#scn').innerHTML = Object.keys(PRESETS).map(s => `<button role="radio" data-scn="${s}" aria-checked="${s === NETS.scn}">${s}</button>`).join('');
   $('#scn-hint').textContent = PRESETS[NETS.scn].h;
@@ -564,17 +587,19 @@ function renderPrice(){
    ${TALK.map(t => row([t.n, t.h, t.u === 'דקות' ? 'דקה' : 'שיחה', t.cr.toFixed(2), '$' + (t.cr*NET.talk).toFixed(3)])).join('')}</tbody></table></div>`;
   const t3 = `<div class="tbl-wrap"><table><thead><tr><th>מדרגה</th><th class="n">הנחה</th><th class="n">Talk Credits בשנה</th></tr></thead><tbody>
    ${[0,1,2,3].map(i => `<tr><td>מדרגה ${i+1}</td><td class="n">${i ? TIER[i]*100+'%' : '–'}</td><td class="n">${i<3 ? (i ? 'מ-' : 'עד ') + num(i ? TH.talk[i] : TH.talk[1]) : 'מעל ' + num(TH.talk[3])}</td></tr>`).join('')}</tbody></table></div>`;
-  const t4 = `<div class="tbl-wrap"><table><thead><tr><th>רכיב</th><th class="n">קטן</th><th class="n">בינוני</th><th class="n">גדול</th></tr></thead><tbody>
-   <tr><td>פיילוט / Use Case ראשון · FDE</td><td class="n">$100,000</td><td class="n">$200,000</td><td class="n">$300,000</td></tr>
-   <tr><td>Use Case נוסף (50%)</td><td class="n">$50,000</td><td class="n">$100,000</td><td class="n">$150,000</td></tr>
-   <tr><td>סביבת ענן לחודש, כולל 2%</td><td class="n">$2,550</td><td class="n">$5,100</td><td class="n">$9,180</td></tr></tbody></table></div>`;
+  const t4 = `<div class="tbl-wrap"><table><thead><tr><th>בעל תפקיד</th><th class="n">תעריף לשעה</th></tr></thead><tbody>
+   ${ROLES.map(r => `<tr><td>${r.n}</td><td class="n">₪${r.rate.toLocaleString('en-US')}</td></tr>`).join('')}</tbody></table></div>`;
+  const t5 = `<div class="tbl-wrap"><table><thead><tr><th>תשתית ענן</th><th class="n">קטן</th><th class="n">בינוני</th><th class="n">גדול</th></tr></thead><tbody>
+   <tr><td>סביבת בית החולים לחודש, כולל 2%</td><td class="n">$2,550</td><td class="n">$5,100</td><td class="n">$9,180</td></tr></tbody></table></div>`;
   $('#pricecol').innerHTML = `<h2 class="sec-title">רישוי אתר</h2>${t0}
    <p class="note"><b>שנת הפיילוט:</b> בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי האתר בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות.</p>
    <h2 class="sec-title">שימוש</h2>${t1}
    <p class="note">על הרישוי משלמים רק על שימוש: טוקנים של סוכני אוטומציה ב-Jeen Agents, ו-Talk Credits של Jeen Talk. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב בטוקנים. מחיר הטוקנים כולל את מודלי השפה.</p><h2 class="sec-title">צריכת Talk Credits לפי סוכן</h2>${t2}
    <p class="note">קרדיט אחד שווה דקת סוכן קולי. שאר הסוכנים צורכים לפי היחס במחירון Jeen Talk. עלויות מודלי הדיבור והשפה מחויבות בנפרד לפי צריכה.</p>
    <h2 class="sec-title">הנחות נפח · Jeen Talk</h2>${t3}<p class="note">ההנחה פרוגרסיבית ומחושבת על הצריכה השנתית של כל בתי החולים יחד. כל מדרגה מתומחרת בהנחה שלה.</p>
-   <h2 class="sec-title">FDE ותשתית</h2>${t4}
+   <h2 class="sec-title">FDE · שירותים לפי עבודה בפועל</h2>${t4}
+   <p class="note">שירותי ה-FDE מחויבים לפי שעות העבודה בפועל של בעלי התפקידים שכל Use Case צריך. היקף השעות נקבע באפיון של ה-Use Case ומאושר מראש. התעריפים בש״ח, לפני מע״מ.</p>
+   <h2 class="sec-title">תשתית ענן</h2>${t5}
    <p class="note">תשתית הענן מחויבת לפי חשבון ה-AWS בפועל ועוד 2%, כולל מודלי השפה של Jeen Workspace ומודלי הדיבור והשפה של Jeen Talk.</p>`;
 }
 
@@ -616,7 +641,9 @@ function quoteData(){
     ['רישוי אתר (Site License)', `${fmt(SITE[S.size])} לשנה, ${S.pilot ? 'החל מהשנה השנייה' : 'ממועד ההצטרפות'}`],
     ['מדרגת המחיר של Jeen Talk', tierTxt],
     ['היקף השימוש בשנה הראשונה', S.y1pct + '% מהשימוש השוטף'],
-    ['Use Cases נוספים בכל שנה נוספת', String(S.ucn)]];
+    ['Use Cases בשנה הראשונה', String(S.uc1)],
+    ['Use Cases בכל שנה נוספת', String(S.ucn)],
+    ['שער דולר לחישוב FDE', `₪${S.fx.toFixed(2)}`]];
   const years = [y1.total, y2.total, y2.total, y2.total, y2.total];
   return {hosp, y1, y2, tierTxt, usage, sets, years, date:S.qDate || todayISO(), valid:addDays(S.qDate, +S.qValid || 30)};
 }
@@ -666,7 +693,7 @@ async function buildDocx(){
   c.push(P(`מערך בתי החולים הממשלתיים מתכבד להציע ל${Q.hosp} את פלטפורמת Jeen AI, כשירות מנוהל בסביבת ה-AI המרכזית של המערך בענן נימבוס (AWS). ההצעה כוללת את Jeen Talk – סוכני AI לשיחה עם המטופלים במוקדי בית החולים – ואת Jeen Enterprise לצוות, הטמעת Use Case על ידי צוות FDE, רישוי פלטפורמה ותשתית ענן. התמחור מבוסס על נתוני השימוש של בית החולים שמפורטים בהצעה.`, {after:200}));
   c.push(P(S.pilot ? 'בית החולים מצטרף בשנת הפיילוט של המערך, ולכן פטור מרישוי פלטפורמה בשנה הראשונה.' : 'בית החולים מצטרף לאחר שנת הפיילוט של המערך, ולכן משלם רישוי פלטפורמה ממועד ההצטרפות.', {after:300}));
   c.push(P('הצעת המחיר כוללת:', {underline:true, after:100}));
-  ['תכולת השירות', 'הנחות התמחור', 'נתוני השימוש ומחירי היחידה', 'עלות השנה הראשונה', 'עלות כל שנה נוספת', 'סיכום ל-5 שנים', 'תנאים כלליים'].forEach(t => c.push(NUM(t)));
+  ['תכולת השירות', 'הנחות התמחור', 'נתוני השימוש ומחירי היחידה', 'שירותי FDE לפי עבודה בפועל', 'עלות השנה הראשונה', 'עלות כל שנה נוספת', 'סיכום ל-5 שנים', 'תנאים כלליים'].forEach(t => c.push(NUM(t)));
   c.push(P('', {after:900}));
   c.push(P('בברכה,', {after:0}), P('מערך בתי החולים הממשלתיים'));
   c.push(new Paragraph({children:[new PageBreak()]}));
@@ -681,7 +708,7 @@ async function buildDocx(){
    '**FinOps** – תקציבים, ניטור עלויות והקצאת עלויות לפי מחלקה ושימוש.'].forEach(t => c.push(B(t)));
   c.push(P('**שימוש מעבר לרישוי** – מחויב רק שימוש של סוכנים שמריצים תהליכים ארגוניים (Flows), כמו קליטת הפניות, תיאום תורים והפקת דוחות, לפי $5 למיליון טוקנים. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב בטוקנים.', {before:120}));
   ['**Jeen Talk** – סוכני AI לשיחה עם המטופלים בטלפון, בצ׳אט, בוואטסאפ ובאתר: סוכנים קוליים וצ׳אט, תמלול ואנליזה של שיחות המוקד, Live Assist למוקדנים ותרגום בזמן אמת. חיוב לפי Talk Credits.',
-   '**FDE** – צוות Forward Deployed Engineers מטמיע את ה-Use Case הראשון ואת ה-Use Cases הנוספים.',
+   '**FDE** – צוות Forward Deployed Engineers מטמיע כל Use Case. החיוב לפי שעות העבודה בפועל של בעלי התפקידים הנדרשים, בתעריף שעתי בש״ח (סעיף 4).',
    '**תשתית ענן מנוהלת** – סביבה מבודדת לבית החולים בסביבה המרכזית של המערך ב-AWS, לפי החשבון בפועל ועוד 2%.'].forEach(t => c.push(B(t)));
 
   c.push(H1('2. הנחות התמחור'));
@@ -693,35 +720,42 @@ async function buildDocx(){
   c.push(table([3438, 1500, 1300, 1600, 1800], ['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש'],
     [...Q.usage.map(u => [u.n, num(u.v), u.u, '$' + u.p.toFixed(u.dp), fmt(u.v*u.p)]), ['סה״כ שימוש לחודש', '', '', '', fmt(monthly)]], {totalLast:true}));
   c.push(GAP());
-  c.push(NOTE('Jeen Talk מחויב ב-Talk Credits לפי צריכת כל סוכן. מחיר הטוקנים של Jeen Agents כולל את מודלי השפה. מודלי הדיבור והשפה של Jeen Talk ותשתית הענן מחושבים בנפרד בסעיפים 4 ו-5.'));
+  c.push(NOTE('Jeen Talk מחויב ב-Talk Credits לפי צריכת כל סוכן. מחיר הטוקנים של Jeen Agents כולל את מודלי השפה. מודלי הדיבור והשפה של Jeen Talk ותשתית הענן מחושבים בנפרד בסעיפים 5 ו-6.'));
 
   const ytab = r => table([3000, 4638, 2000], ['רכיב', 'פירוט', 'עלות ($)'],
     [...r.lines.map(l => [l.n, l.d, l.free ? 'ללא עלות' : num(l.v)]), ['סה״כ לשנה, לפני מע״מ', '', num(r.total)]], {totalLast:true});
-  c.push(H1('4. עלות השנה הראשונה'));
+  c.push(H1('4. שירותי FDE לפי עבודה בפועל'));
+  c.push(P('כל Use Case מוטמע על ידי צוות FDE של Jeen.ai. החיוב לפי שעות העבודה בפועל של בעלי התפקידים שה-Use Case צריך. הטבלה מציגה את ההערכה ל-Use Case אחד, והיקף השעות הסופי נקבע באפיון ומאושר מראש.'));
+  const rolesUsed = ROLES.filter(r => (S[r.k]||0) > 0);
+  c.push(table([4238, 1700, 1500, 2200], ['בעל תפקיד', 'תעריף לשעה (₪)', 'שעות', 'עלות ל-Use Case (₪)'],
+    [...rolesUsed.map(r => [r.n, num(r.rate), num(S[r.k]), num(S[r.k]*r.rate)]), ['סה״כ ל-Use Case', '', num(ucHours(S)), num(ucILS(S))]], {totalLast:true}));
+  c.push(GAP());
+  c.push(NOTE(`בשנה הראשונה: ${S.uc1} Use Cases. בכל שנה נוספת: ${S.ucn} Use Cases. בסעיפים 5 ו-6 הסכומים מוצגים בדולר לפי שער של ₪${S.fx.toFixed(2)} לדולר. החשבונית על שירותי FDE תופק בש״ח.`));
+  c.push(H1('5. עלות השנה הראשונה'));
   c.push(ytab(Q.y1));
   c.push(GAP());
-  c.push(NOTE(`בשנה הראשונה השימוש מחושב לפי ${S.y1pct}% מהשימוש השוטף, בגלל ההקמה וההטמעה ההדרגתית. חבילת ה-FDE היא תשלום חד-פעמי.`));
-  c.push(H1('5. עלות כל שנה נוספת'));
+  c.push(NOTE(`בשנה הראשונה השימוש מחושב לפי ${S.y1pct}% מהשימוש השוטף, בגלל ההקמה וההטמעה ההדרגתית. FDE לפי שעות העבודה בפועל.`));
+  c.push(H1('6. עלות כל שנה נוספת'));
   c.push(ytab(Q.y2));
   c.push(GAP());
   c.push(NOTE('תשתית הענן היא הערכה. היא מחויבת לפי חשבון ה-AWS בפועל ועוד 2% דמי חיוב.'));
 
-  c.push(H1('6. סיכום ל-5 שנים'));
+  c.push(H1('7. סיכום ל-5 שנים'));
   let acc = 0;
   c.push(table([3238, 3200, 3200], ['שנה', 'עלות שנתית ($)', 'מצטבר ($)'],
     [...Q.years.map((v, i) => { acc += v; return ['שנה ' + (i+1), num(v), num(acc)]; }), ['סה״כ 5 שנים', num(acc), '']], {totalLast:true}));
   c.push(GAP());
   c.push(NOTE('הסיכום מניח שימוש קבוע משנה 2 ומחירי יחידה קבועים. כשצריכת המערך כולו עולה, מחיר היחידה צפוי לרדת לפי מדרגות הנפח.'));
 
-  c.push(H1('7. תנאים כלליים'));
+  c.push(H1('8. תנאים כלליים'));
   ['לכל המחירים בהצעה יתווסף מע"מ כחוק.',
    'המחירים נקובים בדולר ארה״ב. החשבונית תופק בש״ח לפי שער הדולר היציג של בנק ישראל ביום הפקתה.',
    'השימוש מחויב מדי חודש לפי צריכה בפועל, מהרגע שמשתמשים: Talk Credits לפי צריכת סוכני Jeen Talk, וטוקנים של סוכני אוטומציה ב-Jeen Agents לפי $5 למיליון טוקנים.',
-   'היקף ה-Use Case מוגדר באפיון. עבודה מעבר להיקף שהוגדר תתומחר בנפרד ותאושר מראש ובכתב.',
+   'שירותי FDE מחויבים לפי שעות העבודה בפועל ובתעריפים שבסעיף 4, בש״ח. היקף השעות לכל Use Case נקבע באפיון ומאושר מראש ובכתב. שעות מעבר להיקף שאושר יחויבו רק לאחר אישור.',
    'רישוי האתר כולל את Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון. בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן מחויב ברישוי ממועד ההצטרפות.',
    'עלויות תשתית הענן, כולל מודלי השפה, מחויבות לפי החשבון בפועל ועוד 2% דמי חיוב. ההערכות בהצעה אינן מחייבות.',
    'הסכומים בהצעה הם אומדן לפי נתוני השימוש שבסעיף 3. החיוב בפועל הוא לפי השימוש בפועל ולפי מחירי היחידה בהצעה.',
-   'תוקף ההצעה: ' + dmy(Q.valid) + '.'].forEach((t, i) => c.push(P(`7.${i+1}  ${t}`, {after:60, keepNext:true})));
+   'תוקף ההצעה: ' + dmy(Q.valid) + '.'].forEach((t, i) => c.push(P(`8.${i+1}  ${t}`, {after:60, keepNext:true})));
   c.push(P('', {after:360}));
   c.push(P('**הריני מאשר/ת את ההצעה על כל תנאיה בשם בית החולים:**', {after:200}));
   ['שם בית החולים:', 'שם החותם ותפקידו:', 'חתימה וחותמת:', 'תאריך:'].forEach(t => c.push(P(`**${t}**   ______________________________`, {after:200})));
@@ -771,11 +805,22 @@ async function buildXlsx(){
   setRow('site', `רישוי אתר לשנה (בית חולים ${SIZE_HE[S.size]})`, SITE[S.size], USD, 'Workspace, Agents, RAG, Admin, Governance ו-FinOps');
   setRow('disc', 'הנחת נפח על Jeen Talk', TIER[S.tier-1], PCT, '0%, 25%, 50% או 62.5%');
   setRow('y1', 'היקף השימוש בשנה הראשונה', S.y1pct/100, PCT);
-  setRow('fde', `חבילת FDE לפיילוט (בית חולים ${SIZE_HE[S.size]})`, FDE[S.size], USD, 'חד-פעמי');
-  setRow('ucn', 'Use Cases נוספים בכל שנה נוספת', S.ucn, INT, '50% ממחיר החבילה ל-Use Case');
+  setRow('uc1', 'Use Cases בשנה הראשונה', S.uc1, INT, 'כולל ה-Use Case של הפיילוט');
+  setRow('ucn', 'Use Cases בכל שנה נוספת', S.ucn, INT);
+  setRow('fx', 'שער דולר לחישוב FDE', S.fx, '0.00', '₪ לדולר. FDE מחויב בש״ח');
   setRow('aws', 'סביבת ענן לבית החולים, לחודש (הערכה)', AWS[S.size], USD);
   setRow('cenN', 'בתי חולים שחולקים בסביבה המרכזית', S.cenN, INT, 'סביבה מרכזית: $12,000 לחודש');
   ['pilot'].forEach(k => ws.getCell(A[k].replace(/\$/g,'')).dataValidation = {type:'list', allowBlank:false, formulae:['"כן,לא"']});
+
+  sec('FDE · שעות לכל Use Case, לפי בעל תפקיד');
+  head(['בעל תפקיד', 'תעריף לשעה (₪)', 'שעות ל-Use Case', 'עלות ל-Use Case (₪)']);
+  const h0 = r;
+  ROLES.forEach(ro => { cell('A' + r, ro.n, {border:true}); cell('B' + r, ro.rate, {fmt:INT, h:'center', border:true}); inp('C' + r, S[ro.k]||0, INT);
+    cell('D' + r, f(`B${r}*C${r}`, (S[ro.k]||0)*ro.rate), {fmt:'"₪"#,##0', h:'center', border:true}); r++; });
+  cell('A' + r, 'סה״כ ל-Use Case', {bold:true, fill:SOFT}); cell('B' + r, '', {fill:SOFT});
+  cell('C' + r, f(`SUM(C${h0}:C${r-1})`, ucHours(S)), {bold:true, fmt:INT, h:'center', fill:SOFT});
+  cell('D' + r, f(`SUM(D${h0}:D${r-1})`, ucILS(S)), {bold:true, fmt:'"₪"#,##0', h:'center', fill:SOFT}); const hTot = r; r++;
+  cell('A' + r, 'בדולר, לפי השער בהנחות', {color:MUTE}); cell('D' + r, f(`D${hTot}/${A.fx}`, ucILS(S)/S.fx), {fmt:USD, h:'center', color:MUTE}); const fdeUSD = 'D' + r; r++;
 
   sec('נתוני שימוש לחודש');
   head(['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש', 'מודלים לחודש · הערכה']);
@@ -802,7 +847,7 @@ async function buildXlsx(){
   const c0 = r; const L1 = Q.y1.lines, L2 = Q.y2.lines;
   const crow = (i, f1, f2) => { cell('A' + r, L1[i].n, {border:true}); cell('B' + r, L1[i].d.replace(/ · הערכה$/,''), {color:MUTE, size:10, border:true});
     cell('C' + r, f(f1, L1[i].v), {fmt:USD, h:'center', border:true}); cell('D' + r, f(f2, L2[i].v), {fmt:USD, h:'center', border:true}); r++; };
-  crow(0, `${A.fde}`, `${A.fde}*0.5*${A.ucn}`);
+  crow(0, `${fdeUSD}*${A.uc1}`, `${fdeUSD}*${A.ucn}`);
   crow(1, `SUM(E${u0}:E${tEnd})*12*${A.y1}`, `SUM(E${u0}:E${tEnd})*12`);
   crow(2, `E${tokR}*12*${A.y1}`, `E${tokR}*12`);
   crow(3, `IF(${A.pilot}="כן",0,1)*${A.site}`, `${A.site}`);
@@ -835,12 +880,14 @@ async function buildXlsx(){
   ['פריט','תיאור','יחידה','מחירון','מחיר'].forEach((t, i) => pc(String.fromCharCode(65+i) + '3', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
   [['רישוי אתר · קטן','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',100000,USD],['רישוי אתר · בינוני','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',200000,USD],
    ['רישוי אתר · גדול','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',300000,USD],['Jeen Agents · אוטומציות','סוכנים שמריצים תהליכים ארגוניים. סוכן אישי בצ׳אט לא מחויב','למיליון טוקנים','',5,'"$"0.00'],
-   ['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט',0.36,0.252,USD4],['חבילת FDE · קטן / בינוני / גדול','פיילוט / Use Case ראשון, חד-פעמי','לבית חולים','','$100K / $200K / $300K',null],
-   ['Use Case נוסף','50% ממחיר החבילה','ל-Use Case','','$50K / $100K / $150K',null]]
+   ['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט',0.36,0.252,USD4],['FDE','שירותי הטמעה לפי שעות עבודה בפועל, לפי בעל תפקיד','לשעה','','ראו טבלת תעריפים',null]]
     .forEach((row, i) => row.slice(0,5).forEach((v, j) => pc(String.fromCharCode(65+j) + (4+i), v, {h:j > 1 ? 'center' : 'right', fmt:j > 2 ? row[5] : null})));
   pc('A13', 'צריכת Talk Credits לפי סוכן', {bold:true, size:13});
   ['סוכן','שימוש','יחידה','קרדיטים ליחידה','מחיר מלא'].forEach((t, i) => pc(String.fromCharCode(65+i) + '14', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
   TALK.forEach((t, i) => [t.n, t.h, t.u === 'דקות' ? 'דקה' : 'שיחה', t.cr, t.cr*0.252].forEach((v, j) => pc(String.fromCharCode(65+j) + (15+i), v, {h:j > 1 ? 'center' : 'right', fmt:j === 3 ? '0.00' : j === 4 ? '"$"0.000' : null})));
+  pc('A30', 'FDE · תעריפים לשעה לפי בעל תפקיד (₪, לפני מע״מ)', {bold:true, size:13});
+  ['בעל תפקיד','תעריף לשעה (₪)'].forEach((t, i) => pc(String.fromCharCode(65+i) + '31', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i ? 'center' : 'right'}));
+  ROLES.forEach((ro, i) => { pc('A' + (32+i), ro.n); pc('B' + (32+i), ro.rate, {h:'center', fmt:'"₪"#,##0'}); });
   pc('A21', 'מדרגות הנחת נפח ל-Jeen Talk (על הצריכה השנתית של כל המערך)', {bold:true, size:13});
   ['מדרגה','הנחה','Talk Credits בשנה'].forEach((t, i) => pc(String.fromCharCode(65+i) + '22', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i ? 'center' : 'right'}));
   [0,1,2,3].forEach(i => ['מדרגה ' + (i+1), TIER[i], ...['talk'].map(k => i < 3 ? (i ? num(TH[k][i]) + ' עד ' + num(TH[k][i+1]) : 'עד ' + num(TH[k][1])) : 'מעל ' + num(TH[k][3]))]
