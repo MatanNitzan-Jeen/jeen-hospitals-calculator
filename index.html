@@ -30,24 +30,8 @@ html,body{direction:rtl}
   --r-md:8px; --r-lg:12px; --r-xl:16px;
   --ease:cubic-bezier(.2,.8,.2,1);
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0B0D17; --bg-soft:#111425; --bg-muted:#1A1E33; --surface:#13162A;
-  --fg:#F3F4F8; --fg-2:#C9CCDA; --fg-3:#9095AD; --fg-4:#6B7090;
-  --border:#262A44; --border-2:#353A5A;
-  --brand:#8F8FFE; --brand-strong:#ADADFD; --brand-soft:#1E1F45; --brand-ink:#CFCFFE; --on-brand:#0B0D17; --logo-ink:#F6E7EE;
-  --ok:#4ADE80; --ok-soft:#10261A; --warn:#FBBF24; --warn-soft:#2A2110;
-  --c1:#8F8FFE; --c2:#5B5BC9; --c3:#CFCFFE; --c4:#C98ACD; --c5:#F4A955; --c6:#EF7A6E; --c7:#6B7090; --c8:#ADADFD;
-  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 16px -4px rgba(0,0,0,.5);
-  color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0B0D17; --bg-soft:#111425; --bg-muted:#1A1E33; --surface:#13162A;
-  --fg:#F3F4F8; --fg-2:#C9CCDA; --fg-3:#9095AD; --fg-4:#6B7090;
-  --border:#262A44; --border-2:#353A5A;
-  --brand:#8F8FFE; --brand-strong:#ADADFD; --brand-soft:#1E1F45; --brand-ink:#CFCFFE; --on-brand:#0B0D17; --logo-ink:#F6E7EE;
-  --ok:#4ADE80; --ok-soft:#10261A; --warn:#FBBF24; --warn-soft:#2A2110;
-  --c1:#8F8FFE; --c2:#5B5BC9; --c3:#CFCFFE; --c4:#C98ACD; --c5:#F4A955; --c6:#EF7A6E; --c7:#6B7090; --c8:#ADADFD;
-  --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow-md:0 6px 16px -4px rgba(0,0,0,.5);
-  color-scheme:dark}
+
+:root{color-scheme:light}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
@@ -385,8 +369,8 @@ const TALK = [
   {k:'xl', n:'תרגום בזמן אמת', u:'דקות', cr:0.56, cloud:0.04, h:'ערבית, רוסית, אמהרית ועוד'}];
 const FDE = {S:100000, M:200000, L:300000}, UC_PCT = 0.5;
 const AWS = {S:2500, M:5000, L:9000}, CENTRAL = 12000, LLM = 2.24, TOK_WS = 0.5, BILL = 0.02;
-const SITE = {S:100000, M:200000, L:300000}, AGENT_RATE = 2.5;
-const SITE_INCL = 'Jeen Workspace, Jeen Agents, Jeen RAG ו-Jeen Admin לכל הארגון';
+const SITE = {S:100000, M:200000, L:300000}, AGENT_RATE = 5;
+const SITE_INCL = 'Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון';
 const PROFILE = {
   S:{ws:450, voice:15000, chat:3000, tr:30000, live:10000, xl:3000, tok:500, ucn:1},
   M:{ws:1050, voice:40000, chat:8000, tr:80000, live:25000, xl:8000, tok:1300, ucn:1},
@@ -456,7 +440,7 @@ function calcHospital(yr){
     {n:'FDE · Use Case', d: yr === 1 ? 'חבילת פיילוט חד-פעמית' : `${S.ucn} Use Cases נוספים`, v: yr === 1 ? FDE[S.size] : FDE[S.size]*UC_PCT*S.ucn},
     {n:'Jeen Talk', d:`${num(credits*12*pct)} Talk Credits בשנה`, v: credits*12*pct*unit('talk',S.tier)},
     {n:'Jeen Agents · אוטומציות', d:`${num(S.tok*12*pct)} מיליון טוקנים בשנה`, v: S.tok*12*pct*AGENT_RATE},
-    {n:'רישוי אתר', d: licOn === 0 ? 'פטור בשנת הפיילוט' : 'Workspace, Agents, RAG ו-Admin', v: SITE[S.size]*licOn, free: licOn === 0},
+    {n:'רישוי אתר', d: licOn === 0 ? 'פטור בשנת הפיילוט' : 'Workspace, Agents, RAG, Admin, Governance ו-FinOps', v: SITE[S.size]*licOn, free: licOn === 0},
     {n:'תשתית ענן · סביבה', d:'AWS בפועל + 2% · הערכה', v:(AWS[S.size] + CENTRAL/Math.max(1,S.cenN))*12*(1+BILL)},
     {n:'תשתית ענן · מודלים', d:'STT/TTS/LLM לפי צריכה · הערכה', v:(tcloud + S.ws*TOK_WS*LLM)*12*pct*(1+BILL)}];
   return {lines:L, total:L.reduce((a,l) => a + l.v, 0)};
@@ -570,9 +554,11 @@ function renderPrice(){
    ${row(['Jeen Workspace','צ׳אט ארגוני ו-AI לכל עובדי בית החולים, מעל נהלים, פרוטוקולים ומסמכים. ללא הגבלת משתמשים'])}
    ${row(['Jeen Agents','בניית סוכני AI ותהליכים ארגוניים ב-No-Code וב-Low-Code לכל המחלקות'])}
    ${row(['Jeen RAG','שכבת ידע על כל המידע של בית החולים, עם הפניה למקור'])}
-   ${row(['Jeen Admin','ניהול משתמשים והרשאות, Governance, ניטור, סינון PHI ובקרת עלויות'])}</tbody></table></div>`;
+   ${row(['Jeen Admin','ניהול משתמשים, הרשאות וסביבות, וניטור הפעילות'])}
+   ${row(['Governance','מדיניות שימוש, סינון מידע רפואי מזהה (PHI/PII), Guardrails ותיעוד ובקרה על כל פעילות ה-AI'])}
+   ${row(['FinOps','תקציבים, ניטור עלויות והקצאת עלויות לפי מחלקה ושימוש'])}</tbody></table></div>`;
   const t1 = `<div class="tbl-wrap"><table><thead><tr><th>שימוש</th><th>מה זה</th><th class="n">יחידה</th><th class="n">מחיר</th></tr></thead><tbody>
-   ${row(['Jeen Agents · אוטומציות','סוכנים שמריצים תהליכים ארגוניים (Flows). סוכן אישי בצ׳אט לא מחויב בטוקנים','למיליון טוקנים','$2.50'])}
+   ${row(['Jeen Agents · אוטומציות','סוכנים שמריצים תהליכים ארגוניים (Flows). סוכן אישי בצ׳אט לא מחויב בטוקנים','למיליון טוקנים','$5.00'])}
    ${row(['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט','$0.252'])}</tbody></table></div>`;
   const t2 = `<div class="tbl-wrap"><table><thead><tr><th>סוכן Jeen Talk</th><th>שימוש</th><th class="n">יחידה</th><th class="n">קרדיטים</th><th class="n">מחיר מלא</th></tr></thead><tbody>
    ${TALK.map(t => row([t.n, t.h, t.u === 'דקות' ? 'דקה' : 'שיחה', t.cr.toFixed(2), '$' + (t.cr*NET.talk).toFixed(3)])).join('')}</tbody></table></div>`;
@@ -690,8 +676,10 @@ async function buildDocx(){
   ['**Jeen Workspace** – צ׳אט ארגוני ו-AI לכל עובדי בית החולים, מעל נהלים, פרוטוקולים ומסמכים, ללא הגבלת משתמשים.',
    '**Jeen Agents** – בניית סוכני AI ותהליכים ארגוניים ב-No-Code וב-Low-Code לכל המחלקות.',
    '**Jeen RAG** – שכבת ידע על כל המידע של בית החולים, עם הפניה למקור.',
-   '**Jeen Admin** – ניהול משתמשים והרשאות, Governance, ניטור, סינון מידע רפואי מזהה (PHI/PII) ובקרת עלויות.'].forEach(t => c.push(B(t)));
-  c.push(P('**שימוש מעבר לרישוי** – מחויב רק שימוש של סוכנים שמריצים תהליכים ארגוניים (Flows), כמו קליטת הפניות, תיאום תורים והפקת דוחות, לפי $2.50 למיליון טוקנים. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב בטוקנים.', {before:120}));
+   '**Jeen Admin** – ניהול משתמשים, הרשאות וסביבות, וניטור הפעילות.',
+   '**Governance** – מדיניות שימוש, סינון מידע רפואי מזהה (PHI/PII), Guardrails ותיעוד ובקרה על כל פעילות ה-AI.',
+   '**FinOps** – תקציבים, ניטור עלויות והקצאת עלויות לפי מחלקה ושימוש.'].forEach(t => c.push(B(t)));
+  c.push(P('**שימוש מעבר לרישוי** – מחויב רק שימוש של סוכנים שמריצים תהליכים ארגוניים (Flows), כמו קליטת הפניות, תיאום תורים והפקת דוחות, לפי $5 למיליון טוקנים. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב בטוקנים.', {before:120}));
   ['**Jeen Talk** – סוכני AI לשיחה עם המטופלים בטלפון, בצ׳אט, בוואטסאפ ובאתר: סוכנים קוליים וצ׳אט, תמלול ואנליזה של שיחות המוקד, Live Assist למוקדנים ותרגום בזמן אמת. חיוב לפי Talk Credits.',
    '**FDE** – צוות Forward Deployed Engineers מטמיע את ה-Use Case הראשון ואת ה-Use Cases הנוספים.',
    '**תשתית ענן מנוהלת** – סביבה מבודדת לבית החולים בסביבה המרכזית של המערך ב-AWS, לפי החשבון בפועל ועוד 2%.'].forEach(t => c.push(B(t)));
@@ -728,9 +716,9 @@ async function buildDocx(){
   c.push(H1('7. תנאים כלליים'));
   ['לכל המחירים בהצעה יתווסף מע"מ כחוק.',
    'המחירים נקובים בדולר ארה״ב. החשבונית תופק בש״ח לפי שער הדולר היציג של בנק ישראל ביום הפקתה.',
-   'השימוש מחויב מדי חודש לפי צריכה בפועל, מהרגע שמשתמשים: Talk Credits לפי צריכת סוכני Jeen Talk, וטוקנים של סוכני אוטומציה ב-Jeen Agents לפי $2.50 למיליון טוקנים.',
+   'השימוש מחויב מדי חודש לפי צריכה בפועל, מהרגע שמשתמשים: Talk Credits לפי צריכת סוכני Jeen Talk, וטוקנים של סוכני אוטומציה ב-Jeen Agents לפי $5 למיליון טוקנים.',
    'היקף ה-Use Case מוגדר באפיון. עבודה מעבר להיקף שהוגדר תתומחר בנפרד ותאושר מראש ובכתב.',
-   'רישוי האתר כולל את Jeen Workspace, Jeen Agents, Jeen RAG ו-Jeen Admin לכל הארגון. בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן מחויב ברישוי ממועד ההצטרפות.',
+   'רישוי האתר כולל את Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון. בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן מחויב ברישוי ממועד ההצטרפות.',
    'עלויות תשתית הענן, כולל מודלי השפה, מחויבות לפי החשבון בפועל ועוד 2% דמי חיוב. ההערכות בהצעה אינן מחייבות.',
    'הסכומים בהצעה הם אומדן לפי נתוני השימוש שבסעיף 3. החיוב בפועל הוא לפי השימוש בפועל ולפי מחירי היחידה בהצעה.',
    'תוקף ההצעה: ' + dmy(Q.valid) + '.'].forEach((t, i) => c.push(P(`7.${i+1}  ${t}`, {after:60, keepNext:true})));
@@ -780,7 +768,7 @@ async function buildXlsx(){
   const A = {};
   const setRow = (key, label, v, fmt, note) => { cell('A' + r, label, {border:true}); inp('B' + r, v, fmt); if (note) cell('C' + r, note, {color:MUTE, size:10}); A[key] = '$B$' + r; r++; };
   setRow('pilot', 'מצטרף בשנת הפיילוט של המערך', S.pilot ? 'כן' : 'לא', null, 'כן = פטור מרישוי בשנה הראשונה');
-  setRow('site', `רישוי אתר לשנה (בית חולים ${SIZE_HE[S.size]})`, SITE[S.size], USD, 'Workspace, Agents, RAG ו-Admin');
+  setRow('site', `רישוי אתר לשנה (בית חולים ${SIZE_HE[S.size]})`, SITE[S.size], USD, 'Workspace, Agents, RAG, Admin, Governance ו-FinOps');
   setRow('disc', 'הנחת נפח על Jeen Talk', TIER[S.tier-1], PCT, '0%, 25%, 50% או 62.5%');
   setRow('y1', 'היקף השימוש בשנה הראשונה', S.y1pct/100, PCT);
   setRow('fde', `חבילת FDE לפיילוט (בית חולים ${SIZE_HE[S.size]})`, FDE[S.size], USD, 'חד-פעמי');
@@ -801,8 +789,8 @@ async function buildXlsx(){
   const tEnd = r - 1;
   urow('Jeen Workspace · משתמשים (כלול ברישוי)', S.ws, 'משתמשים', '0', 0, 'B#*0.5*2.24', S.ws*TOK_WS*LLM); const wsR = r - 1;
   cell('D' + wsR, f('0', 0), {fmt:USD4, h:'center', border:true});
-  urow('Jeen Agents · אוטומציות', S.tok, 'מיליון טוקנים', '2.5', 2.5, '0', 0); const tokR = r - 1;
-  cell('D' + tokR, f('2.5', 2.5), {fmt:USD4, h:'center', border:true});
+  urow('Jeen Agents · אוטומציות', S.tok, 'מיליון טוקנים', '5', 5, '0', 0); const tokR = r - 1;
+  cell('D' + tokR, f('5', 5), {fmt:USD4, h:'center', border:true});
   const monthly = Q.usage.reduce((a, u) => a + u.v*u.p, 0);
   const cloudM = TALK.reduce((a,t) => a + S[t.k]*t.cloud, 0) + S.ws*TOK_WS*LLM;
   cell('A' + r, 'סה״כ לחודש', {bold:true, fill:SOFT}); ['B','C','D'].forEach(k => cell(k + r, '', {fill:SOFT}));
@@ -845,8 +833,8 @@ async function buildXlsx(){
     if (o.fmt) c.numFmt = o.fmt; c.border = {bottom:{style:'thin', color:{argb:LN}}}; };
   pc('A1', 'מחירון · רישוי אתר ושימוש', {bold:true, size:14});
   ['פריט','תיאור','יחידה','מחירון','מחיר'].forEach((t, i) => pc(String.fromCharCode(65+i) + '3', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
-  [['רישוי אתר · קטן','Workspace, Agents, RAG ו-Admin לכל הארגון','לבית חולים לשנה','',100000,USD],['רישוי אתר · בינוני','Workspace, Agents, RAG ו-Admin לכל הארגון','לבית חולים לשנה','',200000,USD],
-   ['רישוי אתר · גדול','Workspace, Agents, RAG ו-Admin לכל הארגון','לבית חולים לשנה','',300000,USD],['Jeen Agents · אוטומציות','סוכנים שמריצים תהליכים ארגוניים. סוכן אישי בצ׳אט לא מחויב','למיליון טוקנים','',2.5,'"$"0.00'],
+  [['רישוי אתר · קטן','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',100000,USD],['רישוי אתר · בינוני','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',200000,USD],
+   ['רישוי אתר · גדול','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',300000,USD],['Jeen Agents · אוטומציות','סוכנים שמריצים תהליכים ארגוניים. סוכן אישי בצ׳אט לא מחויב','למיליון טוקנים','',5,'"$"0.00'],
    ['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט',0.36,0.252,USD4],['חבילת FDE · קטן / בינוני / גדול','פיילוט / Use Case ראשון, חד-פעמי','לבית חולים','','$100K / $200K / $300K',null],
    ['Use Case נוסף','50% ממחיר החבילה','ל-Use Case','','$50K / $100K / $150K',null]]
     .forEach((row, i) => row.slice(0,5).forEach((v, j) => pc(String.fromCharCode(65+j) + (4+i), v, {h:j > 1 ? 'center' : 'right', fmt:j > 2 ? row[5] : null})));
