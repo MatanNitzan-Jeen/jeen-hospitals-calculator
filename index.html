@@ -318,7 +318,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
         <a class="btn primary wide" href="#export" id="go-exp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>הפקת הצעת מחיר</a>
         <div class="actions">
           <button class="btn secondary" id="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>העתקת סיכום</button>
-          <button class="btn secondary" id="reset">איפוס</button>
+          <button class="btn secondary" id="reset">הצעה חדשה</button>
         </div>
         <p class="fine">תשתית הענן היא הערכה ומחויבת לפי חשבון AWS בפועל ועוד 2%. החיוב בפועל לפי השימוש בפועל.</p>
       </div>
@@ -411,9 +411,9 @@ const unit = (k, tier) => NET[k] * (1 - TIER[tier-1]);
 const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, envin:false, tier:1, y1pct:50, essN:11, cenN:11, year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
 let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם']))};
-try { const v = JSON.parse(localStorage.getItem('jeen-calc')||'null'); if (v) S = {...S, ...v}; } catch(e) {}
-try { const v = JSON.parse(localStorage.getItem('jeen-net')||'null'); if (v) NETS = {...NETS, ...v}; } catch(e) {}
-const save = () => { try { localStorage.setItem('jeen-calc', JSON.stringify(S)); localStorage.setItem('jeen-net', JSON.stringify(NETS)); } catch(e) {} };
+// Every page load starts a fresh quote: nothing is kept between visits.
+try { localStorage.removeItem('jeen-calc'); localStorage.removeItem('jeen-net'); } catch(e) {}
+const save = () => {};
 
 // ---------- fields ----------
 function numField(id, label, unitTxt, hint, rateFn){
@@ -504,7 +504,7 @@ document.addEventListener('keydown', e => {
   const items = [...grp.querySelectorAll('button')]; const i = items.indexOf(e.target); if (i < 0) return;
   const d = e.key === 'ArrowLeft' ? 1 : -1; const n = items[(i + d + items.length) % items.length]; n.focus(); n.click(); e.preventDefault();
 });
-$('#reset').addEventListener('click', () => { const q = {qName:S.qName, qTo:S.qTo, qDate:S.qDate, qValid:S.qValid}; S = {...DEF(), ...q}; renderAll(); toast('הנתונים אופסו'); });
+$('#reset').addEventListener('click', () => { S = DEF(); syncQuote(); $('#exp-status').textContent = ''; renderAll(); window.scrollTo({top:0, behavior:'auto'}); toast('אפשר להתחיל הצעה חדשה'); });
 $('#copy').addEventListener('click', () => {
   const y1 = calcHospital(1), y2 = calcHospital(2);
   const txt = [`Jeen · תמחור לבית חולים ${SIZE_HE[S.size]}`, `${S.pilot ? 'מצטרף בשנת הפיילוט' : 'מצטרף לאחר שנת הפיילוט'} · ${S.tier === 1 ? 'מחיר מלא' : 'מדרגה ' + S.tier}`, '',
