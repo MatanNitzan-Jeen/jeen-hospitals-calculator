@@ -425,7 +425,7 @@ const PH = {y1:'שנה ראשונה', yN:'כל שנה נוספת'};
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ucILS = h => ROLES.reduce((a,r) => a + (h[r.k]||0)*r.rate, 0);
 const ucHours = h => ROLES.reduce((a,r) => a + (h[r.k]||0), 0);
-const AWS = {S:10000, M:20000, L:30000}, CENTRAL = 12000, LLM = 2.24, TOK_WS = 0.5, BILL = 0.02;
+const AWS = {S:10000, M:20000, L:30000}, LLM = 2.24, TOK_WS = 0.5, BILL = 0.02;
 const SITE = {S:100000, M:200000, L:300000}, AGENT_RATE = 5;
 const SITE_INCL = 'Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון';
 const PROFILE = {
@@ -448,7 +448,7 @@ const unit = k => NET[k];
 
 // ---------- state ----------
 const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
-const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, y1pct:50, cenN:11, fx:FX_DEF, ucs:defaultUCs('M'), year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
+const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, y1pct:50, fx:FX_DEF, ucs:defaultUCs('M'), year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
 let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם']))};
 // Every page load starts a fresh quote: nothing is kept between visits.
 try { localStorage.removeItem('jeen-calc'); localStorage.removeItem('jeen-net'); } catch(e) {}
@@ -503,7 +503,7 @@ function calcHospital(yr){
     {n:'Jeen Talk', d:`${num(credits*12*pct)} Talk Credits בשנה`, v: credits*12*pct*unit('talk')},
     {n:'Jeen Agents · אוטומציות', d:`${num(S.tok*12*pct)} מיליון טוקנים בשנה`, v: S.tok*12*pct*AGENT_RATE},
     {n:'רישוי אתר', d: licOn === 0 ? 'פטור בשנת הפיילוט' : 'Workspace, Agents, RAG, Admin, Governance ו-FinOps', v: SITE[S.size]*licOn, free: licOn === 0},
-    {n:'תשתית ענן · 2 סביבות', d:'AWS בפועל + 2% · הערכה', v:(AWS[S.size] + CENTRAL/Math.max(1,S.cenN))*12*(1+BILL)},
+    {n:'תשתית ענן · 2 סביבות', d:'AWS בפועל + 2% · הערכה', v:AWS[S.size]*12*(1+BILL)},
     {n:'תשתית ענן · מודלים', d:'STT/TTS/LLM לפי צריכה · הערכה', v:(tcloud + (S.ws*TOK_WS + S.tok)*LLM)*12*pct*(1+BILL)}];
   return {lines:L, total:L.reduce((a,l) => a + l.v, 0)};
 }
@@ -567,7 +567,7 @@ function calcNet(name){
     const fde = ['S','M','L'].reduce((a,k) => a + (n[k]*ucILS(scaleH(TPL.appt.h, k)) + (h[k]-n[k])*ucILS(scaleH(TPL.info.h, k))) / S.fx, 0);
     const talk = credits*NET.talk, agents = tok*AGENT_RATE;
     const lic = ['S','M','L'].reduce((a,k) => a + h[k]*SITE[k], 0) * LIC[y];
-    const aws = ((CENTRAL + ['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + (ws*TOK_WS*MO[y] + tok)*LLM)*(1+BILL);
+    const aws = ((['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + (ws*TOK_WS*MO[y] + tok)*LLM)*(1+BILL);
     const parts = {fde, talk, lic, agents, aws}; const total = Object.values(parts).reduce((a,b) => a+b, 0);
     out.push({H, parts, total});
   }
@@ -740,7 +740,7 @@ async function buildDocx(){
   c.push(P('**שימוש מעבר לרישוי** – מחויב רק שימוש של סוכנים שמריצים תהליכים ארגוניים (Flows), כמו קליטת הפניות, תיאום תורים והפקת דוחות, לפי $5 למיליון טוקנים. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב בטוקנים.', {before:120}));
   ['**Jeen Talk** – סוכני AI לשיחה עם המטופלים בטלפון, בצ׳אט, בוואטסאפ ובאתר: סוכנים קוליים וצ׳אט, תמלול ואנליזה של שיחות המוקד, Live Assist למוקדנים ותרגום בזמן אמת. חיוב לפי Talk Credits.',
    '**FDE** – צוות Forward Deployed Engineers מטמיע כל Use Case. החיוב לפי שעות העבודה בפועל של בעלי התפקידים הנדרשים, בתעריף שעתי בש״ח (סעיף 4).',
-   '**תשתית ענן מנוהלת** – שתי סביבות מבודדות לבית החולים בסביבה המרכזית של המערך ב-AWS, לפי החשבון בפועל ועוד 2%.'].forEach(t => c.push(B(t)));
+   '**תשתית ענן מנוהלת** – שתי סביבות מבודדות לבית החולים בתשתית ה-AWS של המערך. תשתית המערך גדלה לפי מספר בתי החולים שמצטרפים ולפי הגודל שלהם. החיוב לפי החשבון בפועל ועוד 2%.'].forEach(t => c.push(B(t)));
 
   c.push(H1('2. הנחות התמחור'));
   c.push(table([3800, 5838], ['נושא', 'ערך'], Q.sets));
@@ -843,7 +843,6 @@ async function buildXlsx(){
   setRow('y1', 'היקף השימוש בשנה הראשונה', S.y1pct/100, PCT);
   setRow('fx', 'שער דולר לחישוב FDE', S.fx, '0.00', '₪ לדולר. FDE מחויב בש״ח');
   setRow('aws', 'תשתית ענן לבית החולים, 2 סביבות, לחודש', AWS[S.size], USD, 'לפי ה-VP R&D');
-  setRow('cenN', 'בתי חולים שחולקים בסביבה המרכזית', S.cenN, INT, 'סביבה מרכזית: $12,000 לחודש');
   ['pilot'].forEach(k => ws.getCell(A[k].replace(/\$/g,'')).dataValidation = {type:'list', allowBlank:false, formulae:['"כן,לא"']});
 
   sec('FDE · שעות לפי Use Case ובעל תפקיד');
@@ -892,7 +891,7 @@ async function buildXlsx(){
   crow(1, `SUM(E${u0}:E${tEnd})*12*${A.y1}`, `SUM(E${u0}:E${tEnd})*12`);
   crow(2, `E${tokR}*12*${A.y1}`, `E${tokR}*12`);
   crow(3, `IF(${A.pilot}="כן",0,1)*${A.site}`, `${A.site}`);
-  crow(4, `(${A.aws}+12000/MAX(1,${A.cenN}))*12*1.02`, `(${A.aws}+12000/MAX(1,${A.cenN}))*12*1.02`);
+  crow(4, `${A.aws}*12*1.02`, `${A.aws}*12*1.02`);
   crow(5, `F${uTot}*12*${A.y1}*1.02`, `F${uTot}*12*1.02`);
   cell('A' + r, 'סה״כ לשנה, לפני מע״מ', {bold:true, fill:SOFT}); cell('B' + r, '', {fill:SOFT});
   cell('C' + r, f(`SUM(C${c0}:C${r-1})`, Q.y1.total), {bold:true, fmt:USD, h:'center', fill:SOFT});
