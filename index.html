@@ -272,7 +272,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
         <div class="field">
           <span class="flabel" id="lbl-ucadd">הוספת Use Case</span>
           <div class="uc-add" role="group" aria-labelledby="lbl-ucadd" id="uc-add"></div>
-          <span class="hint">בחרו Use Case, ואז סמנו את בעלי התפקידים והתאימו את השעות שלו.</span>
+          <span class="hint">הוסיפו Use Case, תנו לו שם, סמנו את בעלי התפקידים הנדרשים והזינו את השעות לפי האפיון של בית החולים.</span>
         </div>
         <div class="uc-list" id="uc-list"></div>
         <p class="note" id="fde-sum" aria-live="polite"></p>
@@ -360,7 +360,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
       <div class="field">
         <span class="flabel" id="lbl-netucadd">הוספת Use Case</span>
         <div class="uc-add" role="group" aria-labelledby="lbl-netucadd" id="net-uc-add"></div>
-        <span class="hint">השעות לבית חולים בינוני. לבית חולים קטן מחושב 60% מהשעות, ולגדול 140%.</span>
+        <span class="hint">הזינו את השעות לבית חולים בינוני. לבית חולים קטן מחושב 60% מהשעות, ולגדול 140%.</span>
       </div>
       <div class="uc-list" id="net-uc-list"></div>
       <p class="note" id="net-uc-sum" aria-live="polite"></p>
@@ -416,19 +416,11 @@ const ROLES = [
   {k:'h_fin', n:'מומחה AI לעולמות הפיננסים', rate:600}, {k:'h_pmgr', n:'מנהל מוצר בכיר / מנהל פיתוח בכיר', rate:700},
   {k:'h_res', n:'חוקר AI / ML בכיר', rate:1000}, {k:'h_str', n:'מומחה אסטרטגיית אימוץ והטמעת AI בארגונים', rate:1500}];
 const SIZE_MULT = {S:0.6, M:1, L:1.4}, FX_DEF = 3.06;
-const UC_TPL = [
-  {k:'noshow', n:'No Show · צמצום אי-הגעה לתורים', h:{h_devops:60, h_arch:40, h_ai:320, h_pm:120, h_sa:120, h_fs:120, h_str:8}},
-  {k:'codes', n:'קודי טיפול · קידוד אוטומטי של טיפולים', h:{h_devops:40, h_arch:60, h_ai:360, h_pm:120, h_sa:160, h_fs:80, h_res:40}},
-  {k:'appt', n:'זימון ותזכורת תורים · סוכן קולי', h:{h_devops:80, h_arch:60, h_ai:400, h_pm:160, h_sa:120, h_fs:160, h_str:16}},
-  {k:'info', n:'מוקד מידע למטופלים · צ׳אט ו-WhatsApp', h:{h_devops:40, h_arch:40, h_ai:300, h_pm:120, h_sa:80, h_fs:120, h_str:8}},
-  {k:'trans', n:'תמלול וניתוח שיחות המוקד', h:{h_devops:40, h_arch:40, h_ai:200, h_pm:80, h_sa:120, h_fs:80}},
-  {k:'staff', n:'עוזר ידע לצוות · נהלים ופרוטוקולים', h:{h_devops:40, h_arch:40, h_ai:240, h_pm:80, h_sa:120, h_fs:80}},
-  {k:'ref', n:'אוטומציית קליטת הפניות ומסמכים', h:{h_devops:60, h_arch:60, h_ai:320, h_pm:120, h_sa:160, h_fs:160, h_res:40}},
-  {k:'custom', n:'Use Case מותאם', h:{h_devops:40, h_arch:40, h_ai:200, h_pm:80, h_sa:80, h_fs:80}}];
+const UC_TPL = [{k:'custom', n:'Use Case מותאם', h:{}}];
 const TPL = Object.fromEntries(UC_TPL.map(t => [t.k, t]));
-const scaleH = (h, size) => Object.fromEntries(ROLES.map(r => [r.k, Math.round((h[r.k]||0)*SIZE_MULT[size]/4)*4]));
 let ucSeq = 0;
-const mkUC = (tpl, size, phase, open) => ({id:'u' + (++ucSeq), tpl, name:TPL[tpl].n, phase, open:!!open, h:scaleH(TPL[tpl].h, size), base:{...TPL[tpl].h}});
+const mkUC = (tpl, size, phase, open, name) => ({id:'u' + (++ucSeq), tpl, name:name || TPL[tpl].n, phase, open:!!open, h:Object.fromEntries(ROLES.map(r => [r.k, 0])), on:{}});
+const isOn = (u, k) => !!(u.on && u.on[k]) || (u.h[k]||0) > 0;
 const defaultUCs = size => [];
 const PH = {y1:'שנה ראשונה', yN:'כל שנה נוספת'};
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -542,10 +534,7 @@ document.addEventListener('click', e => {
   const st = e.target.closest('.step[data-for]');
   if (st) { const k = st.dataset.for; S[k] = Math.max(k === 'fx' ? 0.5 : 0, Math.round((S[k] + (+st.dataset.step)*STEPS[k])*100)/100); renderAll(); return; }
   const p = e.target.closest('.preset');
-  if (p) { const from = S.size, to = p.dataset.preset;
-    const ucs = S.ucs.map(u => { const base = Object.fromEntries(Object.entries(u.h).map(([k,v]) => [k, u.base && k in u.base ? u.base[k] : v/SIZE_MULT[from]]));
-      return {...u, base, h:Object.fromEntries(Object.entries(base).map(([k,v]) => [k, Math.round(v*SIZE_MULT[to]/4)*4]))}; });
-    S = {...S, size:to, ...PROFILE[to], ucs}; renderFDE(); renderAll(); if (ucs.length && from !== to) toast('השעות ב-Use Cases הותאמו לגודל בית החולים'); return; }
+  if (p) { S = {...S, size:p.dataset.preset, ...PROFILE[p.dataset.preset]}; renderAll(); return; }
   const sw = e.target.closest('.switch'); if (sw) { S[sw.id] = !S[sw.id]; renderAll(); return; }
   const yt = e.target.closest('.ytabs button'); if (yt) { S.year = yt.id === 'y-1' ? 1 : 2; renderAll(); return; }
   const sc = e.target.closest('#scn button'); if (sc) { const f = document.activeElement === sc; NETS.scn = sc.dataset.scn; renderNet(); if (f) { const n = document.querySelector(`#scn [data-scn="${NETS.scn}"]`); if (n) n.focus(); } return; }
@@ -989,9 +978,9 @@ syncQuote();
 // ---------- FDE use cases (hospital screen 'h' + network screen 'n') ----------
 const SC = {
   h:{list:() => S.ucs, set:v => { S.ucs = v; }, size:() => S.size, box:'#uc-list', sum:'#fde-sum', ph:PH,
-     empty:'בחרו את ה-Use Cases של בית החולים מהרשימה למעלה. כל Use Case נפתח עם צוות ושעות מוצעים, ואפשר להתאים אותם.', refresh:sync => renderAll(sync)},
+     empty:'עדיין אין Use Cases. הוסיפו Use Case והזינו את בעלי התפקידים והשעות שלו.', refresh:sync => renderAll(sync)},
   n:{list:() => NETS.ucs, set:v => { NETS.ucs = v; }, size:() => 'M', box:'#net-uc-list', sum:'#net-uc-sum', ph:{y1:'שנת ההצטרפות', yN:'כל שנה אחרי ההצטרפות'},
-     empty:'בחרו Use Cases מהרשימה למעלה כדי להעריך את עלות ה-FDE במערך.', refresh:() => renderNet()}};
+     empty:'עדיין אין Use Cases. הוסיפו Use Case והזינו שעות כדי להעריך את עלות ה-FDE במערך.', refresh:() => renderNet()}};
 const scopeOf = id => S.ucs.some(u => u.id === id) ? 'h' : 'n';
 const getUC = id => S.ucs.find(u => u.id === id) || NETS.ucs.find(u => u.id === id);
 function ucHTML(u, sc){
@@ -1008,11 +997,11 @@ function ucHTML(u, sc){
         <div class="seg" role="radiogroup" aria-labelledby="${u.id}-pl">${['y1','yN'].map(p => `<button type="button" role="radio" data-ucphase="${u.id}" data-p="${p}" aria-checked="${u.phase === p}">${P[p]}</button>`).join('')}</div></div>
     </div>
     <div class="roles" role="group" id="${u.id}-roles" aria-label="בעלי תפקידים ושעות ל-${esc(u.name)}">
-    ${ROLES.map(r => { const v = u.h[r.k]||0, id = `${u.id}-${r.k}`; return `<div class="role${v ? '' : ' off'}" id="${id}-row">
-      <label><input type="checkbox" data-ucrole="${u.id}" data-role="${r.k}"${v ? ' checked' : ''}><span>${r.n}<span class="rr">₪${r.rate.toLocaleString('en-US')} לשעה</span></span></label>
-      <div class="inwrap"><button class="step" type="button" data-ucstep="-1" data-uc="${u.id}" data-role="${r.k}" aria-label="פחות שעות: ${r.n} · ${esc(u.name)}"${v ? '' : ' tabindex="-1"'}>−</button>
-        <input id="${id}" data-uchrs="${u.id}" data-role="${r.k}" inputmode="numeric" autocomplete="off" value="${num(v)}" aria-label="שעות: ${r.n} · ${esc(u.name)}"${v ? '' : ' tabindex="-1"'}>
-        <button class="step" type="button" data-ucstep="1" data-uc="${u.id}" data-role="${r.k}" aria-label="יותר שעות: ${r.n} · ${esc(u.name)}"${v ? '' : ' tabindex="-1"'}>+</button><span class="unit">שעות</span></div>
+    ${ROLES.map(r => { const v = u.h[r.k]||0, on = isOn(u, r.k), id = `${u.id}-${r.k}`; return `<div class="role${on ? '' : ' off'}" id="${id}-row">
+      <label><input type="checkbox" data-ucrole="${u.id}" data-role="${r.k}"${on ? ' checked' : ''}><span>${r.n}<span class="rr">₪${r.rate.toLocaleString('en-US')} לשעה</span></span></label>
+      <div class="inwrap"><button class="step" type="button" data-ucstep="-1" data-uc="${u.id}" data-role="${r.k}" aria-label="פחות שעות: ${r.n} · ${esc(u.name)}"${on ? '' : ' tabindex="-1"'}>−</button>
+        <input id="${id}" data-uchrs="${u.id}" data-role="${r.k}" inputmode="numeric" autocomplete="off" value="${num(v)}" aria-label="שעות: ${r.n} · ${esc(u.name)}"${on ? '' : ' tabindex="-1"'}>
+        <button class="step" type="button" data-ucstep="1" data-uc="${u.id}" data-role="${r.k}" aria-label="יותר שעות: ${r.n} · ${esc(u.name)}"${on ? '' : ' tabindex="-1"'}>+</button><span class="unit">שעות</span></div>
       <span class="sub num" id="${id}-s">₪${num(v*r.rate)}</span></div>`; }).join('')}
     </div>
     <div class="uc-foot"><span class="hint" id="${u.id}-foot"></span><button type="button" class="btn secondary sm" data-ucrm="${u.id}">הסרת ה-Use Case</button></div>
@@ -1024,10 +1013,10 @@ function renderFDE(sc = 'h'){
   updateFDE(sc);
 }
 function updateRole(u, k, typing){
-  const v = u.h[k]||0, id = `${u.id}-${k}`, row = $('#' + id + '-row'); if (!row) return;
-  row.classList.toggle('off', !v);
-  row.querySelector('input[type=checkbox]').checked = v > 0;
-  row.querySelectorAll('.inwrap input, .inwrap button').forEach(el => v ? el.removeAttribute('tabindex') : el.setAttribute('tabindex','-1'));
+  const v = u.h[k]||0, on = isOn(u, k), id = `${u.id}-${k}`, row = $('#' + id + '-row'); if (!row) return;
+  row.classList.toggle('off', !on);
+  row.querySelector('input[type=checkbox]').checked = on;
+  row.querySelectorAll('.inwrap input, .inwrap button').forEach(el => on ? el.removeAttribute('tabindex') : el.setAttribute('tabindex','-1'));
   if (!typing) $('#' + id).value = num(v);
   $('#' + id + '-s').textContent = '₪' + num(v*ROLES.find(r => r.k === k).rate);
 }
@@ -1046,7 +1035,7 @@ function updateFDE(sc = 'h'){
 document.addEventListener('click', e => {
   const add = e.target.closest('[data-ucadd]');
   if (add) { const sc = add.dataset.scope || 'h', C = SC[sc], l = C.list();
-    const u = mkUC(add.dataset.ucadd, C.size(), l.some(x => x.phase === 'y1') ? 'yN' : 'y1', true); C.set([...l, u]); renderFDE(sc); C.refresh(true);
+    const u = mkUC(add.dataset.ucadd, C.size(), l.some(x => x.phase === 'y1') ? 'yN' : 'y1', true, l.length ? `Use Case מותאם ${l.length + 1}` : ''); C.set([...l, u]); renderFDE(sc); C.refresh(true);
     const n = $('#' + u.id + '-name'); if (n) { n.focus(); n.select(); } toast('ה-Use Case נוסף'); return; }
   const rm = e.target.closest('[data-ucrm]');
   if (rm) { const sc = scopeOf(rm.dataset.ucrm), C = SC[sc]; C.set(C.list().filter(x => x.id !== rm.dataset.ucrm)); renderFDE(sc); C.refresh(true); toast('ה-Use Case הוסר'); return; }
@@ -1054,17 +1043,18 @@ document.addEventListener('click', e => {
   if (ph) { const sc = scopeOf(ph.dataset.ucphase), u = getUC(ph.dataset.ucphase); u.phase = ph.dataset.p; renderFDE(sc); SC[sc].refresh(true);
     const b = document.querySelector(`[data-ucphase="${u.id}"][data-p="${u.phase}"]`); if (b) b.focus(); return; }
   const us = e.target.closest('[data-ucstep]');
-  if (us) { const sc = scopeOf(us.dataset.uc), u = getUC(us.dataset.uc), k = us.dataset.role; u.h[k] = Math.max(0, (u.h[k]||0) + (+us.dataset.ucstep)*8); if (u.base) delete u.base[k]; updateRole(u, k); SC[sc].refresh(true); updateFDE(sc); return; }
+  if (us) { const sc = scopeOf(us.dataset.uc), u = getUC(us.dataset.uc), k = us.dataset.role; u.h[k] = Math.max(0, (u.h[k]||0) + (+us.dataset.ucstep)*8); u.on[k] = true; updateRole(u, k); SC[sc].refresh(true); updateFDE(sc); return; }
 });
 document.addEventListener('change', e => {
   const cb = e.target.closest('[data-ucrole]'); if (!cb) return;
   const sc = scopeOf(cb.dataset.ucrole), u = getUC(cb.dataset.ucrole), k = cb.dataset.role;
-  u.h[k] = cb.checked ? (scaleH(TPL[u.tpl].h, SC[sc].size())[k] || 40) : 0; if (u.base) { if (cb.checked && TPL[u.tpl].h[k]) u.base[k] = TPL[u.tpl].h[k]; else delete u.base[k]; } updateRole(u, k); SC[sc].refresh(true); updateFDE(sc);
+  u.on[k] = cb.checked; if (!cb.checked) u.h[k] = 0; updateRole(u, k); SC[sc].refresh(true); updateFDE(sc);
+  if (cb.checked) { const hi = $('#' + u.id + '-' + k); if (hi) { hi.focus(); hi.select(); } }
 });
 document.addEventListener('input', e => {
   const el = e.target;
   if (el.dataset.uchrs) { const sc = scopeOf(el.dataset.uchrs), u = getUC(el.dataset.uchrs), k = el.dataset.role, v = parseInt(el.value.replace(/[^\d]/g,''), 10);
-    u.h[k] = isNaN(v) ? 0 : v; if (u.base) delete u.base[k]; updateRole(u, k, true); SC[sc].refresh(false); updateFDE(sc); }
+    u.h[k] = isNaN(v) ? 0 : v; u.on[k] = true; updateRole(u, k, true); SC[sc].refresh(false); updateFDE(sc); }
   if (el.dataset.ucname) { const u = getUC(el.dataset.ucname); u.name = el.value; $('#' + u.id + '-t').textContent = u.name || 'Use Case ללא שם'; const g = $('#' + u.id + '-roles'); if (g) g.setAttribute('aria-label', 'בעלי תפקידים ושעות ל-' + (u.name || 'Use Case')); }
 });
 document.addEventListener('focusout', e => { const el = e.target; if (el.dataset && el.dataset.uchrs) { const u = getUC(el.dataset.uchrs); if (u) updateRole(u, el.dataset.role); } });
