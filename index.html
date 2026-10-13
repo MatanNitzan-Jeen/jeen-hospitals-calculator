@@ -993,7 +993,7 @@ const SC = {
   h:{list:() => S.ucs, set:v => { S.ucs = v; }, size:() => S.size, box:'#uc-list', sum:'#fde-sum', ph:PH,
      empty:'', refresh:sync => renderAll(sync)},
   n:{list:() => NETS.ucs, set:v => { NETS.ucs = v; }, size:() => 'M', box:'#net-uc-list', sum:'#net-uc-sum', ph:{y1:'שנת ההצטרפות', yN:'כל שנה אחרי ההצטרפות'},
-     empty:'עדיין אין Use Cases. הוסיפו Use Case והזינו שעות כדי להעריך את עלות ה-FDE במערך.', refresh:() => renderNet()}};
+     empty:'', refresh:() => renderNet()}};
 const scopeOf = id => S.ucs.some(u => u.id === id) ? 'h' : 'n';
 const getUC = id => S.ucs.find(u => u.id === id) || NETS.ucs.find(u => u.id === id);
 function ucHTML(u, sc){
@@ -1039,7 +1039,7 @@ function updateFDE(sc = 'h'){
     t.innerHTML = `<span class="num">${num(ucHours(u.h))}</span> שעות · <span class="num">₪${num(ils)}</span>`;
     $('#' + u.id + '-foot').innerHTML = sc === 'h' ? `כ-<span class="num">${fmt(ils/S.fx)}</span> לפי שער של <span class="num">₪${S.fx.toFixed(2)}</span> לדולר`
       : `לבית חולים: קטן <span class="num">${fmt(ils*SIZE_MULT.S/S.fx)}</span> · בינוני <span class="num">${fmt(ils/S.fx)}</span> · גדול <span class="num">${fmt(ils*SIZE_MULT.L/S.fx)}</span>`; });
-  const el = $(C.sum); if (!el) return; el.hidden = sc === 'h' && !l.length;
+  const el = $(C.sum); if (!el) return; el.hidden = !l.length;
   const part = ph => { const g = l.filter(u => u.phase === ph), ils = sumILS(g);
     return sc === 'h' ? `<b>${C.ph[ph]}:</b> ${g.length} Use Case${g.length === 1 ? '' : 's'} · <span class="num">${num(sumHrs(g))}</span> שעות · <span class="num">₪${num(ils)}</span> · כ-<span class="num">${fmt(ils/S.fx)}</span>`
       : `<b>${C.ph[ph]}:</b> ${g.length} Use Case${g.length === 1 ? '' : 's'} · FDE לבית חולים: קטן <span class="num">${fmt(ils*SIZE_MULT.S/S.fx)}</span>, בינוני <span class="num">${fmt(ils/S.fx)}</span>, גדול <span class="num">${fmt(ils*SIZE_MULT.L/S.fx)}</span>`; };
