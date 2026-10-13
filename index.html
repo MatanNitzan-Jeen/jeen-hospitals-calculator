@@ -146,6 +146,9 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .chipbtn:hover{border-color:var(--brand);color:var(--brand-ink);background:var(--brand-soft)}
 .chipbtn[aria-pressed="true"]{border-style:solid;border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink);font-weight:500}
 .uc-list{display:flex;flex-direction:column;gap:10px}
+.uc-list:empty{display:none}
+.notes{display:flex;flex-direction:column;gap:8px}
+.notes .note{margin:0}
 .uc{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface)}
 .uc[open]{border-color:var(--violet-200)}
 .uc summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;flex-wrap:wrap;border-radius:var(--r-lg)}
@@ -649,8 +652,8 @@ function renderPrice(){
    <p class="note"><b>שנת הפיילוט:</b> בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי האתר בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות.</p>
    <h2 class="sec-title">שימוש</h2>${t1}
    <p class="note">על הרישוי משלמים רק על שימוש: סוכני אוטומציה ב-Jeen Agents, ו-Talk Credits של Jeen Talk. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב. <b>מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS.</b></p><h2 class="sec-title">צריכת Talk Credits לפי סוכן</h2>${t2}
-   <p class="note"><b>מינימום שנתי:</b> החל מהשנה השנייה, בית החולים רוכש Talk Credits בהיקף של $200,000 לפחות בשנה. בשנה הראשונה אין מינימום.</p>
-   <p class="note">קרדיט אחד עולה $0.252, במחיר קבוע ללא הנחות סקייל. כל פתרון ב-Jeen Talk צורך מספר קרדיטים ליחידה: לדוגמה, דקת שיחה של סוכן קולי צורכת 0.4 קרדיט, וסוכן צ׳אט צורך 0.5 קרדיט למיליון טוקנים של LLM. עלויות מודלי הדיבור והשפה מחויבות בנפרד, לפי צריכה.</p>
+   <div class="notes"><p class="note"><b>מינימום שנתי:</b> החל מהשנה השנייה, בית החולים רוכש Talk Credits בהיקף של $200,000 לפחות בשנה. בשנה הראשונה אין מינימום.</p>
+   <p class="note">קרדיט אחד עולה $0.252, במחיר קבוע ללא הנחות סקייל. כל פתרון ב-Jeen Talk צורך מספר קרדיטים ליחידה: לדוגמה, דקת שיחה של סוכן קולי צורכת 0.4 קרדיט, וסוכן צ׳אט צורך 0.5 קרדיט למיליון טוקנים של LLM. עלויות מודלי הדיבור והשפה מחויבות בנפרד, לפי צריכה.</p></div>
    <h2 class="sec-title">FDE · שירותים לפי עבודה בפועל</h2>${t4}
    <p class="note">שירותי ה-FDE מחויבים לפי שעות העבודה בפועל של בעלי התפקידים שכל Use Case צריך. היקף השעות נקבע באפיון של ה-Use Case ומאושר מראש. התעריפים בש״ח, לפני מע״מ.</p>
    <h2 class="sec-title">תשתית ענן</h2>${t5}
@@ -988,7 +991,7 @@ syncQuote();
 // ---------- FDE use cases (hospital screen 'h' + network screen 'n') ----------
 const SC = {
   h:{list:() => S.ucs, set:v => { S.ucs = v; }, size:() => S.size, box:'#uc-list', sum:'#fde-sum', ph:PH,
-     empty:'עדיין אין Use Cases. הוסיפו Use Case והזינו את בעלי התפקידים והשעות שלו.', refresh:sync => renderAll(sync)},
+     empty:'', refresh:sync => renderAll(sync)},
   n:{list:() => NETS.ucs, set:v => { NETS.ucs = v; }, size:() => 'M', box:'#net-uc-list', sum:'#net-uc-sum', ph:{y1:'שנת ההצטרפות', yN:'כל שנה אחרי ההצטרפות'},
      empty:'עדיין אין Use Cases. הוסיפו Use Case והזינו שעות כדי להעריך את עלות ה-FDE במערך.', refresh:() => renderNet()}};
 const scopeOf = id => S.ucs.some(u => u.id === id) ? 'h' : 'n';
@@ -1019,7 +1022,7 @@ function ucHTML(u, sc){
 }
 function renderFDE(sc = 'h'){
   const C = SC[sc], l = C.list();
-  $(C.box).innerHTML = l.length ? l.map(u => ucHTML(u, sc)).join('') : `<p class="note">${C.empty}</p>`;
+  $(C.box).innerHTML = l.length ? l.map(u => ucHTML(u, sc)).join('') : C.empty ? `<p class="note">${C.empty}</p>` : '';
   updateFDE(sc);
 }
 function updateRole(u, k, typing){
@@ -1036,7 +1039,7 @@ function updateFDE(sc = 'h'){
     t.innerHTML = `<span class="num">${num(ucHours(u.h))}</span> שעות · <span class="num">₪${num(ils)}</span>`;
     $('#' + u.id + '-foot').innerHTML = sc === 'h' ? `כ-<span class="num">${fmt(ils/S.fx)}</span> לפי שער של <span class="num">₪${S.fx.toFixed(2)}</span> לדולר`
       : `לבית חולים: קטן <span class="num">${fmt(ils*SIZE_MULT.S/S.fx)}</span> · בינוני <span class="num">${fmt(ils/S.fx)}</span> · גדול <span class="num">${fmt(ils*SIZE_MULT.L/S.fx)}</span>`; });
-  const el = $(C.sum); if (!el) return;
+  const el = $(C.sum); if (!el) return; el.hidden = sc === 'h' && !l.length;
   const part = ph => { const g = l.filter(u => u.phase === ph), ils = sumILS(g);
     return sc === 'h' ? `<b>${C.ph[ph]}:</b> ${g.length} Use Case${g.length === 1 ? '' : 's'} · <span class="num">${num(sumHrs(g))}</span> שעות · <span class="num">₪${num(ils)}</span> · כ-<span class="num">${fmt(ils/S.fx)}</span>`
       : `<b>${C.ph[ph]}:</b> ${g.length} Use Case${g.length === 1 ? '' : 's'} · FDE לבית חולים: קטן <span class="num">${fmt(ils*SIZE_MULT.S/S.fx)}</span>, בינוני <span class="num">${fmt(ils/S.fx)}</span>, גדול <span class="num">${fmt(ils*SIZE_MULT.L/S.fx)}</span>`; };
