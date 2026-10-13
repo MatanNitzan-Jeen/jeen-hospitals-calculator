@@ -336,7 +336,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
           <button class="btn secondary" id="copy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>העתקת סיכום</button>
           <button class="btn secondary" id="reset">הצעה חדשה</button>
         </div>
-        <p class="fine">תשתית הענן היא הערכה ומחויבת לפי חשבון AWS בפועל ועוד 2%. החיוב בפועל לפי השימוש בפועל.</p>
+        <p class="fine">תשתית הענן היא הערכה ומחויבת לפי חשבון AWS בפועל. החיוב בפועל לפי השימוש בפועל.</p>
       </div>
     </aside>
   </div>
@@ -425,7 +425,7 @@ const PH = {y1:'שנה ראשונה', yN:'כל שנה נוספת'};
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ucILS = h => ROLES.reduce((a,r) => a + (h[r.k]||0)*r.rate, 0);
 const ucHours = h => ROLES.reduce((a,r) => a + (h[r.k]||0), 0);
-const AWS = {S:10000, M:20000, L:30000}, LLM = 2.24, TOK_WS = 0.5, BILL = 0.02;
+const AWS = {S:10000, M:20000, L:30000}, LLM = 2.24, TOK_WS = 0.5, BILL = 0;
 const SITE = {S:100000, M:200000, L:300000}, AGENT_RATE = 5;
 const SITE_INCL = 'Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון';
 const PROFILE = {
@@ -503,7 +503,7 @@ function calcHospital(yr){
     {n:'Jeen Talk', d:`${num(credits*12*pct)} Talk Credits בשנה`, v: credits*12*pct*unit('talk')},
     {n:'Jeen Agents · אוטומציות', d:`${num(S.tok*12*pct)} מיליון טוקנים בשנה`, v: S.tok*12*pct*AGENT_RATE},
     {n:'רישוי אתר', d: licOn === 0 ? 'פטור בשנת הפיילוט' : 'Workspace, Agents, RAG, Admin, Governance ו-FinOps', v: SITE[S.size]*licOn, free: licOn === 0},
-    {n:'תשתית ענן · 2 סביבות', d:'AWS בפועל + 2% · הערכה', v:AWS[S.size]*12*(1+BILL)},
+    {n:'תשתית ענן · 2 סביבות', d:'AWS בפועל · הערכה', v:AWS[S.size]*12*(1+BILL)},
     {n:'תשתית ענן · מודלים', d:'STT/TTS/LLM לפי צריכה · הערכה', v:(tcloud + (S.ws*TOK_WS + S.tok)*LLM)*12*pct*(1+BILL)}];
   return {lines:L, total:L.reduce((a,l) => a + l.v, 0)};
 }
@@ -573,7 +573,7 @@ function calcNet(name){
   }
   return out;
 }
-const PARTS = [['fde','FDE · שעות עבודה','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['lic','רישוי אתר','var(--c5)'],['agents','Jeen Agents · טוקנים','var(--c8)'],['aws','תשתית ענן + 2%','var(--c7)']];
+const PARTS = [['fde','FDE · שעות עבודה','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['lic','רישוי אתר','var(--c5)'],['agents','Jeen Agents · טוקנים','var(--c8)'],['aws','תשתית ענן','var(--c7)']];
 function renderNet(){
   $('#scn').innerHTML = Object.keys(PRESETS).map(s => `<button role="radio" data-scn="${s}" aria-checked="${s === NETS.scn}">${s}</button>`).join('');
   $('#scn-hint').textContent = PRESETS[NETS.scn].h;
@@ -624,7 +624,7 @@ function renderPrice(){
   const t4 = `<div class="tbl-wrap"><table><thead><tr><th>בעל תפקיד</th><th class="n">תעריף לשעה</th></tr></thead><tbody>
    ${ROLES.map(r => `<tr><td>${r.n}</td><td class="n">₪${r.rate.toLocaleString('en-US')}</td></tr>`).join('')}</tbody></table></div>`;
   const t5 = `<div class="tbl-wrap"><table><thead><tr><th>תשתית ענן</th><th class="n">קטן</th><th class="n">בינוני</th><th class="n">גדול</th></tr></thead><tbody>
-   <tr><td>סביבות בית החולים לחודש (2 סביבות), כולל 2%</td><td class="n">$10,200</td><td class="n">$20,400</td><td class="n">$30,600</td></tr></tbody></table></div>`;
+   <tr><td>סביבות בית החולים לחודש (2 סביבות)</td><td class="n">$10,000</td><td class="n">$20,000</td><td class="n">$30,000</td></tr></tbody></table></div>`;
   $('#pricecol').innerHTML = `<h2 class="sec-title">רישוי אתר</h2>${t0}
    <p class="note"><b>שנת הפיילוט:</b> בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי האתר בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות.</p>
    <h2 class="sec-title">שימוש</h2>${t1}
@@ -633,7 +633,7 @@ function renderPrice(){
    <h2 class="sec-title">FDE · שירותים לפי עבודה בפועל</h2>${t4}
    <p class="note">שירותי ה-FDE מחויבים לפי שעות העבודה בפועל של בעלי התפקידים שכל Use Case צריך. היקף השעות נקבע באפיון של ה-Use Case ומאושר מראש. התעריפים בש״ח, לפני מע״מ.</p>
    <h2 class="sec-title">תשתית ענן</h2>${t5}
-   <p class="note">תשתית הענן מחויבת לפי חשבון ה-AWS בפועל ועוד 2%, כולל מודלי השפה של Jeen Workspace ומודלי הדיבור והשפה של Jeen Talk.</p>`;
+   <p class="note">תשתית הענן מחויבת לפי חשבון ה-AWS בפועל, כולל מודלי השפה של Jeen Workspace ומודלי הדיבור והשפה של Jeen Talk.</p>`;
 }
 
 // ---------- export: quote (Word) + calculator (Excel) ----------
@@ -740,7 +740,7 @@ async function buildDocx(){
   c.push(P('**שימוש מעבר לרישוי** – מחויב רק שימוש של סוכנים שמריצים תהליכים ארגוניים (Flows), כמו קליטת הפניות, תיאום תורים והפקת דוחות, לפי $5 למיליון טוקנים. השימוש בצ׳אט של Jeen Workspace ובסוכנים אישיים לא מחויב בטוקנים.', {before:120}));
   ['**Jeen Talk** – סוכני AI לשיחה עם המטופלים בטלפון, בצ׳אט, בוואטסאפ ובאתר: סוכנים קוליים וצ׳אט, תמלול ואנליזה של שיחות המוקד, Live Assist למוקדנים ותרגום בזמן אמת. חיוב לפי Talk Credits.',
    '**FDE** – צוות Forward Deployed Engineers מטמיע כל Use Case. החיוב לפי שעות העבודה בפועל של בעלי התפקידים הנדרשים, בתעריף שעתי בש״ח (סעיף 4).',
-   '**תשתית ענן מנוהלת** – שתי סביבות מבודדות לבית החולים בתשתית ה-AWS של המערך. תשתית המערך גדלה לפי מספר בתי החולים שמצטרפים ולפי הגודל שלהם. החיוב לפי החשבון בפועל ועוד 2%.'].forEach(t => c.push(B(t)));
+   '**תשתית ענן מנוהלת** – שתי סביבות מבודדות לבית החולים בתשתית ה-AWS של המערך. תשתית המערך גדלה לפי מספר בתי החולים שמצטרפים ולפי הגודל שלהם. החיוב לפי החשבון בפועל.'].forEach(t => c.push(B(t)));
 
   c.push(H1('2. הנחות התמחור'));
   c.push(table([3800, 5838], ['נושא', 'ערך'], Q.sets));
@@ -775,7 +775,7 @@ async function buildDocx(){
   c.push(H1('6. עלות כל שנה נוספת'));
   c.push(ytab(Q.y2));
   c.push(GAP());
-  c.push(NOTE('תשתית הענן היא הערכה. היא מחויבת לפי חשבון ה-AWS בפועל ועוד 2% דמי חיוב.'));
+  c.push(NOTE('תשתית הענן היא הערכה. היא מחויבת לפי חשבון ה-AWS בפועל.'));
 
   c.push(H1('7. סיכום ל-5 שנים'));
   let acc = 0;
@@ -790,7 +790,7 @@ async function buildDocx(){
    'השימוש מחויב מדי חודש לפי צריכה בפועל, מהרגע שמשתמשים: Talk Credits לפי צריכת סוכני Jeen Talk, וטוקנים של סוכני אוטומציה ב-Jeen Agents לפי $5 למיליון טוקנים.',
    'שירותי FDE מחויבים לפי שעות העבודה בפועל ובתעריפים שבסעיף 4, בש״ח. היקף השעות לכל Use Case נקבע באפיון ומאושר מראש ובכתב. שעות מעבר להיקף שאושר יחויבו רק לאחר אישור.',
    'רישוי האתר כולל את Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון. בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן מחויב ברישוי ממועד ההצטרפות.',
-   'עלויות תשתית הענן, כולל מודלי השפה, מחויבות לפי החשבון בפועל ועוד 2% דמי חיוב. ההערכות בהצעה אינן מחייבות.',
+   'עלויות תשתית הענן, כולל מודלי השפה, מחויבות לפי החשבון בפועל. ההערכות בהצעה אינן מחייבות.',
    'הסכומים בהצעה הם אומדן לפי נתוני השימוש שבסעיף 3. החיוב בפועל הוא לפי השימוש בפועל ולפי מחירי היחידה בהצעה.',
    'תוקף ההצעה: ' + dmy(Q.valid) + '.'].forEach((t, i) => c.push(P(`8.${i+1}  ${t}`, {after:60, keepNext:true})));
   c.push(P('', {after:360}));
@@ -891,8 +891,8 @@ async function buildXlsx(){
   crow(1, `SUM(E${u0}:E${tEnd})*12*${A.y1}`, `SUM(E${u0}:E${tEnd})*12`);
   crow(2, `E${tokR}*12*${A.y1}`, `E${tokR}*12`);
   crow(3, `IF(${A.pilot}="כן",0,1)*${A.site}`, `${A.site}`);
-  crow(4, `${A.aws}*12*1.02`, `${A.aws}*12*1.02`);
-  crow(5, `F${uTot}*12*${A.y1}*1.02`, `F${uTot}*12*1.02`);
+  crow(4, `${A.aws}*12`, `${A.aws}*12`);
+  crow(5, `F${uTot}*12*${A.y1}`, `F${uTot}*12`);
   cell('A' + r, 'סה״כ לשנה, לפני מע״מ', {bold:true, fill:SOFT}); cell('B' + r, '', {fill:SOFT});
   cell('C' + r, f(`SUM(C${c0}:C${r-1})`, Q.y1.total), {bold:true, fmt:USD, h:'center', fill:SOFT});
   cell('D' + r, f(`SUM(D${c0}:D${r-1})`, Q.y2.total), {bold:true, fmt:USD, h:'center', fill:SOFT}); const yTot = r; r++;
@@ -906,7 +906,7 @@ async function buildXlsx(){
   cell('A' + r, 'סה״כ 5 שנים', {bold:true, fill:SOFT}); cell('B' + r, f(`SUM(B${s0}:B${r-1})`, acc), {bold:true, fmt:USD, h:'center', fill:SOFT}); cell('C' + r, '', {fill:SOFT}); r += 2;
 
   ['מחירי השימוש הם עלות ל-Jeen, לא כולל עלות טוקנים. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS.',
-   'תשתית הענן היא הערכה, ומחויבת לפי חשבון ה-AWS בפועל ועוד 2% דמי חיוב.',
+   'תשתית הענן היא הערכה, ומחויבת לפי חשבון ה-AWS בפועל.',
    'החיוב בפועל הוא לפי השימוש בפועל ולפי מחירי היחידה הקבועים במחירון.',
    'בית חולים שמצטרף בשנת הפיילוט פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות.']
     .forEach(t => { cell('A' + r, '* ' + t, {color:MUTE, size:10, italic:true}); r++; });
