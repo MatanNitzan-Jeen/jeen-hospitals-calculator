@@ -259,6 +259,11 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
           <button class="switch" role="switch" id="pilot" aria-labelledby="lbl-pilot" aria-checked="true"></button>
         </div>
         <p class="note" id="site-note"></p>
+        <div class="field">
+          <label for="y1pct">היקף השימוש בשנה הראשונה: <span class="num" id="y1pct-v">50%</span></label>
+          <input class="range" type="range" id="y1pct" min="10" max="100" step="5" value="50" aria-describedby="y1pct-h">
+          <span class="hint" id="y1pct-h">בשנה הראשונה בית החולים מקים ומטמיע בהדרגה, ולכן לא צורך מהיום הראשון את כל הנפחים. האחוז חל רק על רכיבי השימוש: Jeen Talk, Jeen Agents ועלות המודלים. FDE, רישוי האתר ו-2 הסביבות מחושבים במלואם. מהשנה השנייה השימוש לפי 100%.</span>
+        </div>
       </div>
 
       <div class="card">
@@ -271,6 +276,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
         </div>
         <div class="uc-list" id="uc-list"></div>
         <p class="note" id="fde-sum" aria-live="polite"></p>
+        <div class="grid2" id="set-fields"></div>
       </div>
 
       <div class="card">
@@ -289,17 +295,6 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
         <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><path d="M16.5 13v7M13 16.5h7"/></svg></div>
           <div><h2>Jeen Agents · אוטומציות ארגוניות</h2><p>חיוב לפי טוקנים רק על סוכנים שמריצים תהליכים ארגוניים.</p></div></div>
         <div class="grid2" id="ag-fields"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
-          <div><h2>הגדרות תמחור</h2><p>היקף השימוש בשנה הראשונה ושער הדולר.</p></div></div>
-        <div class="field">
-          <label for="y1pct">היקף השימוש בשנה הראשונה: <span class="num" id="y1pct-v">50%</span></label>
-          <input class="range" type="range" id="y1pct" min="10" max="100" step="5" value="50">
-          <span class="hint">הקמה והטמעה הדרגתית. בשנים הבאות 100%.</span>
-        </div>
-        <div class="grid2" id="set-fields"></div>
       </div>
 
       <div class="card" id="export" tabindex="-1">
@@ -348,7 +343,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
   <div class="intro">
     <span class="eyebrow">כל המערך · 5 שנים</span>
     <h1>עלות שנתית לכל בתי החולים</h1>
-    <p>כלי הערכה לסדרי גודל: בחרו כמה בתי חולים מצטרפים בכל שנה ואילו Use Cases הם מטמיעים. נפחי השימוש לפי הפרופילים קטן, בינוני וגדול. הצעת מחיר מדויקת לבית חולים מפיקים במסך ״בית חולים״.</p>
+    <p>כלי הערכה לסדרי גודל: בחרו כמה בתי חולים מצטרפים בכל שנה ואילו Use Cases הם מטמיעים. נפחי השימוש לפי הפרופילים קטן, בינוני וגדול. בשנה הראשונה של המערך החישוב מניח חצי שנה פעילות ו-50% מהשימוש, כי בתי החולים מצטרפים במהלך השנה. הצעת מחיר מדויקת לבית חולים מפיקים במסך ״בית חולים״.</p>
   </div>
   <div class="col">
     <div class="card">
@@ -369,6 +364,9 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
       </div>
       <div class="uc-list" id="net-uc-list"></div>
       <p class="note" id="net-uc-sum" aria-live="polite"></p>
+      <div class="grid2"><div class="field"><label for="nfx">שער הדולר לחישוב FDE</label>
+        <div class="inwrap"><button class="step" type="button" data-nfx="-1" aria-label="הורדת השער">−</button><input id="nfx" inputmode="decimal" autocomplete="off" aria-describedby="nfx-r"><button class="step" type="button" data-nfx="1" aria-label="העלאת השער">+</button><span class="unit">₪ לדולר</span></div>
+        <span class="rate" id="nfx-r">אותו שער כמו במסך בית החולים. משמש רק להצגת עלות ה-FDE בדולר.</span></div></div>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="card">
@@ -399,15 +397,12 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
   <div class="l"><small id="mb-l">שנה ראשונה</small><b class="num" id="mb-v">$0</b></div>
   <a class="btn secondary" href="#rcard">לפירוט</a>
 </div>
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
 (() => {
-const DISC = 0;
 const LIST = {talk:0.252};
-const NET = Object.fromEntries(Object.entries(LIST).map(([k,v]) => [k, v*(1-DISC)]));
-const TIER = [0];
-const TH = {talk:[0,140000,756000,2520000]};
+const NET = {...LIST};
 const TALK = [
   {k:'voice', n:'סוכן קולי', u:'דקות', u1:'דקה', cr:0.40, cloud:0.04, h:'זימון ותזכורת תורים, מידע למטופל'},
   {k:'chat', n:'סוכן צ׳אט', u:'מיליון טוקנים', u1:'מיליון טוקנים של LLM', cr:0.5, cloud:2.24, h:'אתר, וואטסאפ, אפליקציה'},
@@ -439,7 +434,7 @@ const PH = {y1:'שנה ראשונה', yN:'כל שנה נוספת'};
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ucILS = h => ROLES.reduce((a,r) => a + (h[r.k]||0)*r.rate, 0);
 const ucHours = h => ROLES.reduce((a,r) => a + (h[r.k]||0), 0);
-const AWS = {S:10000, M:20000, L:30000}, LLM = 2.24, TOK_WS = 0.5, BILL = 0;
+const AWS = {S:10000, M:20000, L:30000}, LLM = 2.24, TOK_WS = 0.5;
 const SITE = {S:100000, M:200000, L:300000}, AGENT_RATE = 5;
 const SITE_INCL = 'Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון';
 const PROFILE = {
@@ -447,6 +442,7 @@ const PROFILE = {
   M:{ws:1050, voice:40000, chat:200, tr:80000, live:25000, xl:8000, tok:1300},
   L:{ws:2400, voice:100000, chat:500, tr:200000, live:60000, xl:20000, tok:3200}};
 const SIZE_HE = {S:'קטן', M:'בינוני', L:'גדול'};
+const RAMP_MAX = {S:3, M:4, L:4};
 const PRESETS = {
   'שמרני':{S:[1,1,2,3,3], M:[1,2,3,3,4], L:[1,1,2,3,4], h:'פיילוט קטן והצטרפות איטית'},
   'בסיס':{S:[1,2,3,3,3], M:[1,3,4,4,4], L:[1,2,3,4,4], h:'בית חולים מכל גודל בפיילוט, הרחבה הדרגתית'},
@@ -480,7 +476,7 @@ function numField(id, label, unitTxt, hint, rateFn){
 $('#talk-fields').innerHTML = TALK.map(t => numField(t.k, t.n, t.u + ' בחודש', t.h)).join('');
 $('#ws-fields').innerHTML = numField('ws', 'משתמשים פעילים בחודש', 'משתמשים', 'משמש רק להערכת צריכת המודלים בענן');
 $('#ag-fields').innerHTML = numField('tok', 'טוקנים של סוכני אוטומציה בחודש', 'מיליון טוקנים', '');
-$('#set-fields').innerHTML = numField('fx', 'שער הדולר לחישוב FDE', '₪ לדולר', 'השירותים מחויבים בש״ח. השער משמש רק להצגה בדולר');
+$('#set-fields').innerHTML = numField('fx', 'שער הדולר לחישוב FDE', '₪ לדולר', 'התעריפים של בעלי התפקידים בש״ח. השער ממיר את עלות ה-FDE לדולר כדי להציג סכום אחד בהצעה. החשבונית על FDE יוצאת בש״ח לפי השעות בפועל, והשער לא משנה אותה.');
 $('#uc-add').innerHTML = UC_TPL.map(t => `<button type="button" class="chipbtn" data-ucadd="${t.k}">+ ${t.n}</button>`).join('');
 const NUMK = ['ws','voice','chat','tr','live','xl','tok','fx'];
 const STEPS = {ws:50, voice:1000, chat:10, tr:1000, live:1000, xl:500, tok:50, fx:0.05};
@@ -517,8 +513,8 @@ function calcHospital(yr){
     {n:'Jeen Talk', d:`${num(credits*12*pct)} Talk Credits בשנה`, v: credits*12*pct*unit('talk')},
     {n:'Jeen Agents · אוטומציות', d:`${num(S.tok*12*pct)} מיליון טוקנים בשנה`, v: S.tok*12*pct*AGENT_RATE},
     {n:'רישוי אתר', d: licOn === 0 ? 'פטור בשנת הפיילוט' : 'Workspace, Agents, RAG, Admin, Governance ו-FinOps', v: SITE[S.size]*licOn, free: licOn === 0},
-    {n:'תשתית ענן · 2 סביבות', d:'AWS בפועל · הערכה', v:AWS[S.size]*12*(1+BILL)},
-    {n:'תשתית ענן · מודלים', d:'STT/TTS/LLM לפי צריכה · הערכה', v:(tcloud + (S.ws*TOK_WS + S.tok)*LLM)*12*pct*(1+BILL)}];
+    {n:'תשתית ענן · 2 סביבות', d:'AWS בפועל · הערכה', v:AWS[S.size]*12},
+    {n:'תשתית ענן · מודלים', d:'STT/TTS/LLM לפי צריכה · הערכה', v:(tcloud + (S.ws*TOK_WS + S.tok)*LLM)*12*pct}];
   return {lines:L, total:L.reduce((a,l) => a + l.v, 0)};
 }
 function renderHospital(){
@@ -545,16 +541,18 @@ document.addEventListener('click', e => {
   const st = e.target.closest('.step[data-for]');
   if (st) { const k = st.dataset.for; S[k] = Math.max(k === 'fx' ? 0.5 : 0, Math.round((S[k] + (+st.dataset.step)*STEPS[k])*100)/100); renderAll(); return; }
   const p = e.target.closest('.preset');
-  if (p) { S = {...S, size:p.dataset.preset, ...PROFILE[p.dataset.preset], ucs:defaultUCs(p.dataset.preset)}; renderFDE(); renderAll(); return; }
+  if (p) { const from = S.size, to = p.dataset.preset;
+    const ucs = S.ucs.map(u => ({...u, h:Object.fromEntries(Object.entries(u.h).map(([k,v]) => [k, Math.round(v*SIZE_MULT[to]/SIZE_MULT[from]/4)*4]))}));
+    S = {...S, size:to, ...PROFILE[to], ucs}; renderFDE(); renderAll(); if (ucs.length && from !== to) toast('השעות ב-Use Cases הותאמו לגודל בית החולים'); return; }
   const sw = e.target.closest('.switch'); if (sw) { S[sw.id] = !S[sw.id]; renderAll(); return; }
   const yt = e.target.closest('.ytabs button'); if (yt) { S.year = yt.id === 'y-1' ? 1 : 2; renderAll(); return; }
   const sc = e.target.closest('#scn button'); if (sc) { NETS.scn = sc.dataset.scn; renderNet(); save(); return; }
   const tab = e.target.closest('.tab'); if (tab) { showTab(tab.id.replace('tab-','')); return; }
 });
 document.addEventListener('keydown', e => {
-  const grp = e.target.closest('[role="radiogroup"],[role="tablist"]'); if (!grp || !['ArrowLeft','ArrowRight'].includes(e.key)) return;
+  const grp = e.target.closest('[role="radiogroup"],[role="tablist"]'); if (!grp || !['ArrowLeft','ArrowRight','Home','End'].includes(e.key)) return;
   const items = [...grp.querySelectorAll('button')]; const i = items.indexOf(e.target); if (i < 0) return;
-  const d = e.key === 'ArrowLeft' ? 1 : -1; const n = items[(i + d + items.length) % items.length]; n.focus(); n.click(); e.preventDefault();
+  const d = e.key === 'ArrowLeft' ? 1 : -1; const n = e.key === 'Home' ? items[0] : e.key === 'End' ? items[items.length-1] : items[(i + d + items.length) % items.length]; n.focus(); n.click(); e.preventDefault();
 });
 $('#reset').addEventListener('click', () => { S = DEF(); renderFDE(); syncQuote(); $('#exp-status').textContent = ''; renderAll(); window.scrollTo({top:0, behavior:'auto'}); toast('אפשר להתחיל הצעה חדשה'); });
 $('#copy').addEventListener('click', () => {
@@ -581,7 +579,7 @@ function calcNet(name){
     const fde = ['S','M','L'].reduce((a,k) => a + (n[k]*netUC('y1', k) + (h[k]-n[k])*netUC('yN', k)) / S.fx, 0);
     const talk = credits*NET.talk, agents = tok*AGENT_RATE;
     const lic = ['S','M','L'].reduce((a,k) => a + h[k]*SITE[k], 0) * LIC[y];
-    const aws = ((['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + (ws*TOK_WS*MO[y] + tok)*LLM)*(1+BILL);
+    const aws = ((['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + (ws*TOK_WS*MO[y] + tok)*LLM);
     const parts = {fde, talk, lic, agents, aws}; const total = Object.values(parts).reduce((a,b) => a+b, 0);
     out.push({H, parts, total});
   }
@@ -590,11 +588,11 @@ function calcNet(name){
 const PARTS = [['fde','FDE · שעות עבודה','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['lic','רישוי אתר','var(--c5)'],['agents','Jeen Agents · טוקנים','var(--c8)'],['aws','תשתית ענן','var(--c7)']];
 const netUC = (ph, k) => NETS.ucs.filter(u => u.phase === ph).reduce((a,u) => a + ucILS(u.h)*SIZE_MULT[k], 0);
 function renderNet(){
-  updateFDE('n');
+  updateFDE('n'); const nf = $('#nfx'); if (nf && document.activeElement !== nf) nf.value = S.fx.toFixed(2);
   $('#scn').innerHTML = Object.keys(PRESETS).map(s => `<button role="radio" data-scn="${s}" aria-checked="${s === NETS.scn}">${s}</button>`).join('');
   $('#scn-hint').textContent = PRESETS[NETS.scn].h;
   const R = rampFor(NETS.scn), edit = NETS.scn === 'מותאם';
-  $('#ramp').innerHTML = `<caption class="sr" style="caption-side:top;text-align:start;padding:10px 14px;font-size:13px;color:var(--fg-3)">בתי חולים פעילים בסוף כל שנה (מצטבר)${edit ? ' · ניתן לעריכה' : ''}</caption>
+  $('#ramp').innerHTML = `<caption class="sr" style="caption-side:top;text-align:start;padding:10px 14px;font-size:13px;color:var(--fg-3)">בתי חולים פעילים בסוף כל שנה (מצטבר)${edit ? ` · ניתן לעריכה: מספר שלא יורד משנה לשנה, עד ${RAMP_MAX.S} קטנים, ${RAMP_MAX.M} בינוניים ו-${RAMP_MAX.L} גדולים` : ''}</caption>
     <thead><tr><th>גודל</th>${[1,2,3,4,5].map(y => `<th class="n">שנה ${y}</th>`).join('')}</tr></thead><tbody>` +
     ['S','M','L'].map(k => `<tr><td>${SIZE_HE[k]}</td>${R[k].map((v,y) => `<td class="n">${edit ? `<input aria-label="${SIZE_HE[k]} שנה ${y+1}" data-r="${k}" data-y="${y}" value="${v}" inputmode="numeric">` : v}</td>`).join('')}</tr>`).join('') +
     `<tr class="tot"><td>סה״כ</td>${[0,1,2,3,4].map(y => `<td class="n">${R.S[y]+R.M[y]+R.L[y]}</td>`).join('')}</tr></tbody>`;
@@ -603,7 +601,7 @@ function renderNet(){
     .map(([a,b]) => `<div class="kpi"><small>${a}</small><b class="num">${b}</b></div>`).join('');
   // chart
   const W = 720, Hh = 280, x0 = 56, y0 = 20, base = 240, bw = 72, gap = (W - x0 - 20 - 5*bw)/4;
-  const peak = Math.max(...res.map(r => r.total)) * 1.08; const Y = v => base - v/peak*(base-y0);
+  const peak = Math.max(1, ...res.map(r => r.total)) * 1.08; const Y = v => base - v/peak*(base-y0);
   const ticks = 4; let g = '';
   for (let i=0;i<=ticks;i++){ const v = peak/ticks*i, y = Y(v); g += `<line x1="${x0}" x2="${W-20}" y1="${y}" y2="${y}" stroke="var(--border)"/><text x="${x0-8}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--fg-3)" direction="ltr">${fmtK(v)}</text>`; }
   res.forEach((r,i) => { const x = x0 + i*(bw+gap); let acc = 0;
@@ -618,13 +616,21 @@ function renderNet(){
     PARTS.map(([k,n]) => `<tr><td>${n}</td>${res.map(r => `<td class="n">${num(r.parts[k])}</td>`).join('')}<td class="n">${num(res.reduce((a,r) => a + r.parts[k], 0))}</td></tr>`).join('') +
     `<tr class="tot"><td>סה״כ למערך</td>${res.map(r => `<td class="n">${num(r.total)}</td>`).join('')}<td class="n">${num(t5)}</td></tr>` + `</tbody>`;
 }
-document.addEventListener('change', e => { const el = e.target; if (el.dataset && el.dataset.r){ const v = Math.max(0, parseInt(el.value,10)||0); NETS.custom[el.dataset.r][+el.dataset.y] = v; renderNet(); save(); } });
+document.addEventListener('change', e => { const el = e.target; if (!(el.dataset && el.dataset.r)) return;
+  const k = el.dataset.r, y = +el.dataset.y, row = NETS.custom[k], prev = y ? row[y-1] : 0;
+  const v = Math.min(RAMP_MAX[k], Math.max(prev, parseInt(el.value,10)||0)); row[y] = v;
+  for (let i = y+1; i < 5; i++) row[i] = Math.max(row[i], v);
+  if (+el.value !== v) toast(`בתי חולים פעילים מצטברים: ${prev} עד ${RAMP_MAX[k]}`); renderNet(); });
+
+document.addEventListener('click', e => { const b = e.target.closest('[data-nfx]'); if (!b) return; S.fx = Math.max(0.5, Math.round((S.fx + (+b.dataset.nfx)*0.05)*100)/100); renderNet(); renderAll(); });
+document.addEventListener('input', e => { if (e.target.id !== 'nfx') return; const v = parseFloat(e.target.value.replace(/[^\d.]/g,'')); if (v >= 0.5) { S.fx = v; renderNet(); renderAll(); } });
+document.addEventListener('focusout', e => { if (e.target.id === 'nfx') e.target.value = S.fx.toFixed(2); });
 
 // ---------- price list ----------
 function renderPrice(){
   const row = (a) => `<tr>${a.map((c,i) => `<td class="${i>1 ? 'n' : (i===1?'desc':'')}">${c}</td>`).join('')}</tr>`;
   const t0 = `<div class="tbl-wrap"><table><thead><tr><th>רישוי אתר · Site License</th><th class="n">קטן</th><th class="n">בינוני</th><th class="n">גדול</th></tr></thead><tbody>
-   <tr><td>רישוי שנתי לבית חולים, מהשנה השנייה</td><td class="n">$100,000</td><td class="n">$200,000</td><td class="n">$300,000</td></tr></tbody></table></div>
+   <tr><td>רישוי שנתי לבית חולים · פטור בשנה הראשונה למצטרפים בשנת הפיילוט</td><td class="n">$100,000</td><td class="n">$200,000</td><td class="n">$300,000</td></tr></tbody></table></div>
    <div class="tbl-wrap"><table><thead><tr><th>כלול ברישוי האתר</th><th>מה זה</th></tr></thead><tbody>
    ${row(['Jeen Workspace','צ׳אט ארגוני ו-AI לכל עובדי בית החולים, מעל נהלים, פרוטוקולים ומסמכים. ללא הגבלת משתמשים'])}
    ${row(['Jeen Agents','בניית סוכני AI ותהליכים ארגוניים ב-No-Code וב-Low-Code לכל המחלקות'])}
@@ -649,7 +655,7 @@ function renderPrice(){
    <h2 class="sec-title">FDE · שירותים לפי עבודה בפועל</h2>${t4}
    <p class="note">שירותי ה-FDE מחויבים לפי שעות העבודה בפועל של בעלי התפקידים שכל Use Case צריך. היקף השעות נקבע באפיון של ה-Use Case ומאושר מראש. התעריפים בש״ח, לפני מע״מ.</p>
    <h2 class="sec-title">תשתית ענן</h2>${t5}
-   <p class="note">תשתית הענן מחויבת לפי חשבון ה-AWS בפועל, כולל מודלי השפה של Jeen Workspace ומודלי הדיבור והשפה של Jeen Talk.</p>`;
+   <p class="note">העלויות בטבלה הן הערכה. תשתית הענן מחויבת לפי חשבון ה-AWS בפועל, כולל מודלי השפה של Jeen Workspace ומודלי הדיבור והשפה של Jeen Talk.</p>`;
 }
 
 // ---------- export: quote (Word) + calculator (Excel) ----------
@@ -737,10 +743,10 @@ async function buildDocx(){
   c.push(P('**' + Q.hosp + '**', {after:300}));
   c.push(P('שלום רב,', {after:360}));
   c.push(P('**הצעת מחיר לשירותי Jeen AI ל' + Q.hosp + '**', {align:CE, size:32, after:360}));
-  c.push(P(`מערך בתי החולים הממשלתיים מתכבד להציע ל${Q.hosp} את פלטפורמת Jeen AI, כשירות מנוהל בסביבת ה-AI המרכזית של המערך בענן נימבוס (AWS). ההצעה כוללת את Jeen Talk – סוכני AI לשיחה עם המטופלים במוקדי בית החולים – ואת Jeen Enterprise לצוות, הטמעת Use Case על ידי צוות FDE, רישוי פלטפורמה ותשתית ענן. התמחור מבוסס על נתוני השימוש של בית החולים שמפורטים בהצעה.`, {after:200}));
-  c.push(P(S.pilot ? 'בית החולים מצטרף בשנת הפיילוט של המערך, ולכן פטור מרישוי פלטפורמה בשנה הראשונה.' : 'בית החולים מצטרף לאחר שנת הפיילוט של המערך, ולכן משלם רישוי פלטפורמה ממועד ההצטרפות.', {after:300}));
+  c.push(P(`מערך בתי החולים הממשלתיים מתכבד להציע ל${Q.hosp} את פלטפורמת Jeen AI, כשירות מנוהל בתשתית ה-AWS של המערך. ההצעה כוללת רישוי אתר ל-Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל בית החולים; את Jeen Talk – סוכני AI לשיחה עם המטופלים במוקדי בית החולים; הטמעת Use Cases על ידי צוות FDE; ותשתית ענן. התמחור מבוסס על נתוני השימוש של בית החולים שמפורטים בהצעה.`, {after:200}));
+  c.push(P(S.pilot ? 'בית החולים מצטרף בשנת הפיילוט של המערך, ולכן פטור מרישוי האתר בשנה הראשונה.' : 'בית החולים מצטרף לאחר שנת הפיילוט של המערך, ולכן משלם רישוי אתר ממועד ההצטרפות.', {after:300}));
   c.push(P('הצעת המחיר כוללת:', {underline:true, after:100}));
-  ['תכולת השירות', 'הנחות התמחור', 'נתוני השימוש ומחירי היחידה', 'שירותי FDE לפי עבודה בפועל', 'עלות השנה הראשונה', 'עלות כל שנה נוספת', 'סיכום ל-5 שנים', 'תנאים כלליים'].forEach(t => c.push(NUM(t)));
+  ['תכולת השירות', 'פרמטרי התמחור', 'נתוני השימוש ומחירי היחידה', 'שירותי FDE לפי עבודה בפועל', 'עלות השנה הראשונה', 'עלות כל שנה נוספת', 'סיכום ל-5 שנים', 'תנאים כלליים'].forEach(t => c.push(NUM(t)));
   c.push(P('', {after:900}));
   c.push(P('בברכה,', {after:0}), P('מערך בתי החולים הממשלתיים'));
   c.push(new Paragraph({children:[new PageBreak()]}));
@@ -758,7 +764,7 @@ async function buildDocx(){
    '**FDE** – צוות Forward Deployed Engineers מטמיע כל Use Case. החיוב לפי שעות העבודה בפועל של בעלי התפקידים הנדרשים, בתעריף שעתי בש״ח (סעיף 4).',
    '**תשתית ענן מנוהלת** – שתי סביבות מבודדות לבית החולים בתשתית ה-AWS של המערך. תשתית המערך גדלה לפי מספר בתי החולים שמצטרפים ולפי הגודל שלהם. החיוב לפי החשבון בפועל.'].forEach(t => c.push(B(t)));
 
-  c.push(H1('2. הנחות התמחור'));
+  c.push(H1('2. פרמטרי התמחור'));
   c.push(table([3800, 5838], ['נושא', 'ערך'], Q.sets));
 
   c.push(H1('3. נתוני השימוש ומחירי היחידה'));
@@ -767,7 +773,7 @@ async function buildDocx(){
   c.push(table([3438, 1500, 1300, 1600, 1800], ['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש'],
     [...Q.usage.map(u => [u.n, num(u.v), u.u, '$' + u.p.toFixed(u.dp), fmt(u.v*u.p)]), ['סה״כ שימוש לחודש', '', '', '', fmt(monthly)]], {totalLast:true}));
   c.push(GAP());
-  c.push(NOTE('Jeen Talk מחויב ב-Talk Credits: קרדיט אחד עולה $0.252, וכל סוכן צורך מספר קרדיטים ליחידה. מחירי השימוש בטבלה הם עלות ל-Jeen, ללא עלות טוקנים. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS. עלות מודלי השפה מחושבת בתשתית הענן בסעיפים 5 ו-6.'));
+  c.push(NOTE('Jeen Talk מחויב ב-Talk Credits: קרדיט אחד עולה $0.252, וכל סוכן צורך מספר קרדיטים ליחידה. מחירי השימוש בטבלה הם התשלום ל-Jeen. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS. עלות מודלי השפה מחושבת בתשתית הענן בסעיפים 5 ו-6.'));
 
   const ytab = r => table([3000, 4638, 2000], ['רכיב', 'פירוט', 'עלות ($)'],
     [...r.lines.map(l => [l.n, l.d, l.free ? 'ללא עלות' : num(l.v)]), ['סה״כ לשנה, לפני מע״מ', '', num(r.total)]], {totalLast:true});
@@ -802,7 +808,7 @@ async function buildDocx(){
 
   c.push(H1('8. תנאים כלליים'));
   ['לכל המחירים בהצעה יתווסף מע"מ כחוק.',
-   'המחירים נקובים בדולר ארה״ב. החשבונית תופק בש״ח לפי שער הדולר היציג של בנק ישראל ביום הפקתה.',
+   'המחירים נקובים בדולר ארה״ב, למעט שירותי FDE שמתומחרים ומחויבים בש״ח. חשבונית על רכיבים בדולר תופק בש״ח לפי שער הדולר היציג של בנק ישראל ביום הפקתה.',
    'השימוש מחויב מדי חודש לפי צריכה בפועל, מהרגע שמשתמשים: Talk Credits לפי צריכת סוכני Jeen Talk, וטוקנים של סוכני אוטומציה ב-Jeen Agents לפי $5 למיליון טוקנים.',
    'שירותי FDE מחויבים לפי שעות העבודה בפועל ובתעריפים שבסעיף 4, בש״ח. היקף השעות לכל Use Case נקבע באפיון ומאושר מראש ובכתב. שעות מעבר להיקף שאושר יחויבו רק לאחר אישור.',
    'רישוי האתר כולל את Jeen Workspace, Jeen Agents, Jeen RAG, Jeen Admin, Governance ו-FinOps לכל הארגון. בית חולים שמצטרף בשנת הפיילוט של המערך פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן מחויב ברישוי ממועד ההצטרפות.',
@@ -851,15 +857,16 @@ async function buildXlsx(){
   cell('A4', 'דולר ארה״ב, לפני מע״מ. התאים בסגול בהיר ניתנים לעריכה, והחישוב מתעדכן.', {color:MUTE, italic:true});
   r = 5;
 
-  sec('הנחות התמחור');
+  sec('פרמטרי התמחור');
   const A = {};
   const setRow = (key, label, v, fmt, note) => { cell('A' + r, label, {border:true}); inp('B' + r, v, fmt); if (note) cell('C' + r, note, {color:MUTE, size:10}); A[key] = '$B$' + r; r++; };
   setRow('pilot', 'מצטרף בשנת הפיילוט של המערך', S.pilot ? 'כן' : 'לא', null, 'כן = פטור מרישוי בשנה הראשונה');
   setRow('site', `רישוי אתר לשנה (בית חולים ${SIZE_HE[S.size]})`, SITE[S.size], USD, 'Workspace, Agents, RAG, Admin, Governance ו-FinOps');
   setRow('y1', 'היקף השימוש בשנה הראשונה', S.y1pct/100, PCT);
   setRow('fx', 'שער דולר לחישוב FDE', S.fx, '0.00', '₪ לדולר. FDE מחויב בש״ח');
-  setRow('aws', 'תשתית ענן לבית החולים, 2 סביבות, לחודש', AWS[S.size], USD, 'לפי ה-VP R&D');
+  setRow('aws', 'תשתית ענן לבית החולים, 2 סביבות, לחודש', AWS[S.size], USD, 'הערכה. החיוב לפי חשבון ה-AWS בפועל');
   ['pilot'].forEach(k => ws.getCell(A[k].replace(/\$/g,'')).dataValidation = {type:'list', allowBlank:false, formulae:['"כן,לא"']});
+  ws.getCell(A.fx.replace(/\$/g,'')).dataValidation = {type:'decimal', operator:'greaterThan', allowBlank:false, formulae:[0.5], showErrorMessage:true, error:'שער הדולר חייב להיות גדול מ-0.5'};
 
   sec('FDE · שעות לפי Use Case ובעל תפקיד');
   const subRef = {y1:[], yN:[]};
@@ -876,15 +883,15 @@ async function buildXlsx(){
   ['y1','yN'].forEach(ph => { const ils = sumILS(ucsOf(ph));
     cell('A' + r, `סה״כ FDE · ${PH[ph]}`, {bold:true, fill:SOFT}); cell('B' + r, '', {fill:SOFT});
     cell('C' + r, f(subRef[ph].length ? subRef[ph].join('+') : '0', ils), {bold:true, fmt:'"₪"#,##0', h:'center', fill:SOFT});
-    cell('D' + r, f(`C${r}/${A.fx}`, ils/S.fx), {bold:true, fmt:USD, h:'center', fill:SOFT}); fdeTot[ph] = 'D' + r; r++; });
+    cell('D' + r, f(`IF(${A.fx}>0,C${r}/${A.fx},0)`, ils/S.fx), {bold:true, fmt:USD, h:'center', fill:SOFT}); fdeTot[ph] = 'D' + r; r++; });
 
   sec('נתוני שימוש לחודש');
   head(['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש', 'מודלים לחודש · הערכה']);
-  const u0 = r; const disc = 1;
+  const u0 = r;
   const urow = (name, v, unitTxt, base, bv, cloudF, cloudV) => {
     cell('A' + r, name, {border:true}); inp('B' + r, v, INT); cell('C' + r, unitTxt, {h:'center', border:true, color:MUTE});
-    cell('D' + r, f(`${base}`, +(bv*disc).toFixed(6)), {fmt:USD4, h:'center', border:true});
-    cell('E' + r, f(`B${r}*D${r}`, v*bv*disc), {fmt:USD, h:'center', border:true});
+    cell('D' + r, f(`${base}`, +bv.toFixed(6)), {fmt:USD4, h:'center', border:true});
+    cell('E' + r, f(`B${r}*D${r}`, v*bv), {fmt:USD, h:'center', border:true});
     cell('F' + r, f(cloudF.replace(/B#/g, 'B' + r), cloudV), {fmt:USD, h:'center', border:true, color:MUTE}); r++; };
   TALK.forEach(t => urow('Jeen Talk · ' + t.n, S[t.k], t.u, `${t.cr}*0.252`, t.cr*0.252, `B#*${t.cloud}`, S[t.k]*t.cloud));
   const tEnd = r - 1;
@@ -921,7 +928,7 @@ async function buildXlsx(){
     cell('C' + r, f(i ? `C${r-1}+B${r}` : `B${r}`, acc), {fmt:USD, h:'center', border:true}); r++; });
   cell('A' + r, 'סה״כ 5 שנים', {bold:true, fill:SOFT}); cell('B' + r, f(`SUM(B${s0}:B${r-1})`, acc), {bold:true, fmt:USD, h:'center', fill:SOFT}); cell('C' + r, '', {fill:SOFT}); r += 2;
 
-  ['מחירי השימוש הם עלות ל-Jeen, לא כולל עלות טוקנים. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS.',
+  ['מחירי השימוש הם התשלום ל-Jeen. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS.',
    'תשתית הענן היא הערכה, ומחויבת לפי חשבון ה-AWS בפועל.',
    'החיוב בפועל הוא לפי השימוש בפועל ולפי מחירי היחידה הקבועים במחירון.',
    'בית חולים שמצטרף בשנת הפיילוט פטור מרישוי בשנה הראשונה. בית חולים שמצטרף לאחר מכן משלם רישוי ממועד ההצטרפות.']
@@ -934,15 +941,19 @@ async function buildXlsx(){
     c.alignment = {horizontal:o.h || 'right', vertical:'middle', wrapText:true, readingOrder:'rtl'}; if (o.fill) c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:o.fill}};
     if (o.fmt) c.numFmt = o.fmt; c.border = {bottom:{style:'thin', color:{argb:LN}}}; };
   pc('A1', 'מחירון · רישוי אתר ושימוש', {bold:true, size:14});
-  ['פריט','תיאור','יחידה','מחירון','מחיר'].forEach((t, i) => pc(String.fromCharCode(65+i) + '3', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
+  ['פריט','תיאור','יחידה','מחיר'].forEach((t, i) => pc(String.fromCharCode(65+i) + '3', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
   [['רישוי אתר · קטן','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',100000,USD],['רישוי אתר · בינוני','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',200000,USD],
    ['רישוי אתר · גדול','Workspace, Agents, RAG, Admin, Governance ו-FinOps לכל הארגון','לבית חולים לשנה','',300000,USD],['Jeen Agents · אוטומציות','סוכנים שמריצים תהליכים ארגוניים. סוכן אישי בצ׳אט לא מחויב','למיליון טוקנים','',5,'"$"0.00'],
    ['Talk Credit','יחידת הצריכה של סוכני Jeen Talk','לקרדיט','',0.252,'"$"0.000'],['FDE','שירותי הטמעה לפי שעות עבודה בפועל, לפי בעל תפקיד','לשעה','','ראו טבלת תעריפים',null]]
-    .forEach((row, i) => row.slice(0,5).forEach((v, j) => pc(String.fromCharCode(65+j) + (4+i), v, {h:j > 1 ? 'center' : 'right', fmt:j > 2 ? row[5] : null})));
-  pc('A11', '* מחירי השימוש הם עלות ל-Jeen, לא כולל עלות טוקנים. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS.', {color:MUTE, size:10});
+    .forEach((row, i) => [row[0], row[1], row[2], row[4]].forEach((v, j) => pc(String.fromCharCode(65+j) + (4+i), v, {h:j > 1 ? 'center' : 'right', fmt:j === 3 ? row[5] : null})));
+  pc('A11', '* מחירי השימוש הם התשלום ל-Jeen. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS.', {color:MUTE, size:10});
   pc('A13', 'צריכת Talk Credits לפי סוכן · קרדיט אחד = $0.252', {bold:true, size:13});
   ['סוכן','שימוש','יחידה','קרדיטים ליחידה','מחיר ליחידה'].forEach((t, i) => pc(String.fromCharCode(65+i) + '14', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i > 1 ? 'center' : 'right'}));
   TALK.forEach((t, i) => [t.n, t.h, t.u1, t.cr, t.cr*0.252].forEach((v, j) => pc(String.fromCharCode(65+j) + (15+i), v, {h:j > 1 ? 'center' : 'right', fmt:j === 3 ? '0.00' : j === 4 ? '"$"0.000' : null})));
+  pc('A21', 'תשתית ענן · 2 סביבות לבית החולים, לחודש (הערכה)', {bold:true, size:13});
+  ['גודל','קטן','בינוני','גדול'].forEach((t, i) => pc(String.fromCharCode(65+i) + '22', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i ? 'center' : 'right'}));
+  ['לחודש', AWS.S, AWS.M, AWS.L].forEach((v, i) => pc(String.fromCharCode(65+i) + '23', v, {h:i ? 'center' : 'right', fmt:i ? USD : null}));
+  pc('A24', '* החיוב לפי חשבון ה-AWS בפועל.', {color:MUTE, size:10});
   pc('A30', 'FDE · תעריפים לשעה לפי בעל תפקיד (₪, לפני מע״מ)', {bold:true, size:13});
   ['בעל תפקיד','תעריף לשעה (₪)'].forEach((t, i) => pc(String.fromCharCode(65+i) + '31', t, {bold:true, color:'FFFFFFFF', fill:VIO, h:i ? 'center' : 'right'}));
   ROLES.forEach((ro, i) => { pc('A' + (32+i), ro.n); pc('B' + (32+i), ro.rate, {h:'center', fmt:'"₪"#,##0'}); });
@@ -993,12 +1004,12 @@ function ucHTML(u, sc){
       <div class="field"><span class="flabel" id="${u.id}-pl">מתי מטמיעים</span>
         <div class="seg" role="radiogroup" aria-labelledby="${u.id}-pl">${['y1','yN'].map(p => `<button type="button" role="radio" data-ucphase="${u.id}" data-p="${p}" aria-checked="${u.phase === p}">${P[p]}</button>`).join('')}</div></div>
     </div>
-    <div class="roles" role="group" aria-label="בעלי תפקידים ושעות ל-${esc(u.name)}">
+    <div class="roles" role="group" id="${u.id}-roles" aria-label="בעלי תפקידים ושעות ל-${esc(u.name)}">
     ${ROLES.map(r => { const v = u.h[r.k]||0, id = `${u.id}-${r.k}`; return `<div class="role${v ? '' : ' off'}" id="${id}-row">
       <label><input type="checkbox" data-ucrole="${u.id}" data-role="${r.k}"${v ? ' checked' : ''}><span>${r.n}<span class="rr">₪${r.rate.toLocaleString('en-US')} לשעה</span></span></label>
-      <div class="inwrap"><button class="step" type="button" data-ucstep="-1" data-uc="${u.id}" data-role="${r.k}" aria-label="פחות שעות: ${r.n}"${v ? '' : ' tabindex="-1"'}>−</button>
-        <input id="${id}" data-uchrs="${u.id}" data-role="${r.k}" inputmode="numeric" autocomplete="off" value="${num(v)}" aria-label="שעות: ${r.n}"${v ? '' : ' tabindex="-1"'}>
-        <button class="step" type="button" data-ucstep="1" data-uc="${u.id}" data-role="${r.k}" aria-label="יותר שעות: ${r.n}"${v ? '' : ' tabindex="-1"'}>+</button><span class="unit">שעות</span></div>
+      <div class="inwrap"><button class="step" type="button" data-ucstep="-1" data-uc="${u.id}" data-role="${r.k}" aria-label="פחות שעות: ${r.n} · ${esc(u.name)}"${v ? '' : ' tabindex="-1"'}>−</button>
+        <input id="${id}" data-uchrs="${u.id}" data-role="${r.k}" inputmode="numeric" autocomplete="off" value="${num(v)}" aria-label="שעות: ${r.n} · ${esc(u.name)}"${v ? '' : ' tabindex="-1"'}>
+        <button class="step" type="button" data-ucstep="1" data-uc="${u.id}" data-role="${r.k}" aria-label="יותר שעות: ${r.n} · ${esc(u.name)}"${v ? '' : ' tabindex="-1"'}>+</button><span class="unit">שעות</span></div>
       <span class="sub num" id="${id}-s">₪${num(v*r.rate)}</span></div>`; }).join('')}
     </div>
     <div class="uc-foot"><span class="hint" id="${u.id}-foot"></span><button type="button" class="btn secondary sm" data-ucrm="${u.id}">הסרת ה-Use Case</button></div>
@@ -1051,12 +1062,17 @@ document.addEventListener('input', e => {
   const el = e.target;
   if (el.dataset.uchrs) { const sc = scopeOf(el.dataset.uchrs), u = getUC(el.dataset.uchrs), k = el.dataset.role, v = parseInt(el.value.replace(/[^\d]/g,''), 10);
     u.h[k] = isNaN(v) ? 0 : v; updateRole(u, k, true); SC[sc].refresh(false); updateFDE(sc); }
-  if (el.dataset.ucname) { const u = getUC(el.dataset.ucname); u.name = el.value; $('#' + u.id + '-t').textContent = u.name || 'Use Case ללא שם'; }
+  if (el.dataset.ucname) { const u = getUC(el.dataset.ucname); u.name = el.value; $('#' + u.id + '-t').textContent = u.name || 'Use Case ללא שם'; const g = $('#' + u.id + '-roles'); if (g) g.setAttribute('aria-label', 'בעלי תפקידים ושעות ל-' + (u.name || 'Use Case')); }
 });
 document.addEventListener('focusout', e => { const el = e.target; if (el.dataset && el.dataset.uchrs) { const u = getUC(el.dataset.uchrs); if (u) updateRole(u, el.dataset.role); } });
 document.addEventListener('toggle', e => { const d = e.target; if (d.classList && d.classList.contains('uc')) { const u = getUC(d.dataset.uc); if (u) u.open = d.open; } }, true);
 $('#net-uc-add').innerHTML = UC_TPL.map(t => `<button type="button" class="chipbtn" data-ucadd="${t.k}" data-scope="n">+ ${t.n}</button>`).join('');
 renderFDE('h'); renderFDE('n');
+
+// roving tab order: only the selected radio of each group is in the Tab sequence
+function roving(){ document.querySelectorAll('[role="radiogroup"]').forEach(g => { const bs = [...g.querySelectorAll('[role="radio"]')]; const on = bs.find(b => b.getAttribute('aria-checked') === 'true') || bs[0];
+  bs.forEach(b => b === on ? b.removeAttribute('tabindex') : b.setAttribute('tabindex', '-1')); }); }
+new MutationObserver(roving).observe(document.body, {subtree:true, childList:true, attributes:true, attributeFilter:['aria-checked']});
 
 // ---------- tabs ----------
 function showTab(name){
@@ -1064,8 +1080,7 @@ function showTab(name){
   $('#mbar').style.visibility = name === 'calc' ? 'visible' : 'hidden';
   if (name === 'net') renderNet();
 }
-function renderAll(sync = true){ if (sync) syncInputs(); else { document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === S.size))); }
-  syncInputs(); renderHospital(); save(); }
+function renderAll(){ syncInputs(); renderHospital(); roving(); }
 const h0 = (location.hash||'').slice(1); renderPrice(); renderAll(); renderNet(); showTab(['net','price'].includes(h0) ? h0 : 'calc');
 window.addEventListener('hashchange', () => { const h = location.hash.slice(1); showTab(['net','price'].includes(h) ? h : 'calc'); });
 })();
