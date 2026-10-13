@@ -463,7 +463,7 @@ const unit = k => NET[k];
 // ---------- state ----------
 const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, y1pct:50, fx:FX_DEF, ucs:defaultUCs('M'), year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
-let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם'])), ucs:[mkUC('noshow', 'M', 'y1', false), mkUC('codes', 'M', 'yN', false)]};
+let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם'])), ucs:[]};
 // Every page load starts a fresh quote: nothing is kept between visits.
 try { localStorage.removeItem('jeen-calc'); localStorage.removeItem('jeen-net'); } catch(e) {}
 const save = () => {};
