@@ -144,6 +144,7 @@ h1,h2,h3{text-wrap:balance;margin:0}
 .uc-add{display:flex;flex-wrap:wrap;gap:8px}
 .chipbtn{border:1px dashed var(--border-2);background:var(--surface);border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--fg-2);min-height:36px;transition:border-color .14s,background .14s}
 .chipbtn:hover{border-color:var(--brand);color:var(--brand-ink);background:var(--brand-soft)}
+.chipbtn[aria-pressed="true"]{border-style:solid;border-color:var(--brand);background:var(--brand-soft);color:var(--brand-ink);font-weight:500}
 .uc-list{display:flex;flex-direction:column;gap:10px}
 .uc{border:1px solid var(--border);border-radius:var(--r-lg);background:var(--surface)}
 .uc[open]{border-color:var(--violet-200)}
@@ -347,7 +348,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
   <div class="intro">
     <span class="eyebrow">כל המערך · 5 שנים</span>
     <h1>עלות שנתית לכל בתי החולים</h1>
-    <p>בחרו תרחיש הצטרפות. הנחות הנפח מחושבות על הצריכה המצרפית של כל המערך, ולכן מחיר היחידה יורד ככל שמצטרפים יותר בתי חולים. נפחי השימוש לפי הפרופילים קטן, בינוני וגדול.</p>
+    <p>כלי הערכה לסדרי גודל: בחרו כמה בתי חולים מצטרפים בכל שנה ואילו Use Cases הם מטמיעים. נפחי השימוש לפי הפרופילים קטן, בינוני וגדול. הצעת מחיר מדויקת לבית חולים מפיקים במסך ״בית חולים״.</p>
   </div>
   <div class="col">
     <div class="card">
@@ -357,6 +358,18 @@ footer{color:var(--fg-3);font-size:12px;padding-block:32px 0;display:flex;gap:6p
         <span class="hint" id="scn-hint"></span>
       </div>
       <div class="tbl-wrap"><table id="ramp"></table></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div class="chip-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6M21 20a6 6 0 0 0-4-5.6"/></svg></div>
+        <div><h2>Use Cases לכל בית חולים</h2><p>הערכה ל-FDE במערך: אילו Use Cases כל בית חולים מטמיע בשנת ההצטרפות, וכמה Use Cases נוספים בכל שנה אחריה.</p></div></div>
+      <div class="field">
+        <span class="flabel" id="lbl-netuc">Use Cases בשנת ההצטרפות</span>
+        <div class="uc-add" role="group" aria-labelledby="lbl-netuc" id="net-ucs"></div>
+        <span class="hint" id="net-uc-hint"></span>
+      </div>
+      <div class="grid2"><div class="field"><label for="nucN">Use Cases נוספים לכל בית חולים, בכל שנה</label>
+        <div class="inwrap"><button class="step" type="button" data-netstep="-1" aria-label="הפחתה">−</button><input id="nucN" inputmode="numeric" autocomplete="off" aria-describedby="nucN-r"><button class="step" type="button" data-netstep="1" aria-label="הוספה">+</button><span class="unit">Use Cases</span></div>
+        <span class="rate" id="nucN-r"></span></div></div>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="card">
@@ -410,6 +423,8 @@ const ROLES = [
   {k:'h_res', n:'חוקר AI / ML בכיר', rate:1000}, {k:'h_str', n:'מומחה אסטרטגיית אימוץ והטמעת AI בארגונים', rate:1500}];
 const SIZE_MULT = {S:0.6, M:1, L:1.4}, FX_DEF = 3.06;
 const UC_TPL = [
+  {k:'noshow', n:'No Show · צמצום אי-הגעה לתורים', h:{h_devops:60, h_arch:40, h_ai:320, h_pm:120, h_sa:120, h_fs:120, h_str:8}},
+  {k:'codes', n:'קודי טיפול · קידוד אוטומטי של טיפולים', h:{h_devops:40, h_arch:60, h_ai:360, h_pm:120, h_sa:160, h_fs:80, h_res:40}},
   {k:'appt', n:'זימון ותזכורת תורים · סוכן קולי', h:{h_devops:80, h_arch:60, h_ai:400, h_pm:160, h_sa:120, h_fs:160, h_str:16}},
   {k:'info', n:'מוקד מידע למטופלים · צ׳אט ו-WhatsApp', h:{h_devops:40, h_arch:40, h_ai:300, h_pm:120, h_sa:80, h_fs:120, h_str:8}},
   {k:'trans', n:'תמלול וניתוח שיחות המוקד', h:{h_devops:40, h_arch:40, h_ai:200, h_pm:80, h_sa:120, h_fs:80}},
@@ -420,7 +435,7 @@ const TPL = Object.fromEntries(UC_TPL.map(t => [t.k, t]));
 const scaleH = (h, size) => Object.fromEntries(ROLES.map(r => [r.k, Math.round((h[r.k]||0)*SIZE_MULT[size]/4)*4]));
 let ucSeq = 0;
 const mkUC = (tpl, size, phase, open) => ({id:'u' + (++ucSeq), tpl, name:TPL[tpl].n, phase, open:!!open, h:scaleH(TPL[tpl].h, size)});
-const defaultUCs = size => [mkUC('appt', size, 'y1', true), mkUC('info', size, 'yN', false)];
+const defaultUCs = size => [];
 const PH = {y1:'שנה ראשונה', yN:'כל שנה נוספת'};
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ucILS = h => ROLES.reduce((a,r) => a + (h[r.k]||0)*r.rate, 0);
@@ -449,7 +464,7 @@ const unit = k => NET[k];
 // ---------- state ----------
 const todayISO = () => { const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
 const DEF = () => ({size:'M', ...PROFILE.M, pilot:true, y1pct:50, fx:FX_DEF, ucs:defaultUCs('M'), year:1, qName:'', qTo:'', qDate:todayISO(), qValid:30});
-let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם']))};
+let S = DEF(); let NETS = {scn:'בסיס', custom:JSON.parse(JSON.stringify(PRESETS['מותאם'])), ucs1:['noshow'], ucN:1};
 // Every page load starts a fresh quote: nothing is kept between visits.
 try { localStorage.removeItem('jeen-calc'); localStorage.removeItem('jeen-net'); } catch(e) {}
 const save = () => {};
@@ -564,7 +579,7 @@ function calcNet(name){
     const vol = (key, monthly) => ['S','M','L'].reduce((a,k) => a + h[k]*PROFILE[k][key], 0) * MAT[y] * (monthly ? 1 : MO[y]);
     const credits = TALK.reduce((a,t) => a + vol(t.k)*t.cr, 0);
     const ws = Math.round(vol('ws', true)), tok = vol('tok');
-    const fde = ['S','M','L'].reduce((a,k) => a + (n[k]*ucILS(scaleH(TPL.appt.h, k)) + (h[k]-n[k])*ucILS(scaleH(TPL.info.h, k))) / S.fx, 0);
+    const fde = ['S','M','L'].reduce((a,k) => a + (n[k]*NETS.ucs1.reduce((b,t) => b + ucILS(scaleH(TPL[t].h, k)), 0) + (h[k]-n[k])*NETS.ucN*avgUC(k)) / S.fx, 0);
     const talk = credits*NET.talk, agents = tok*AGENT_RATE;
     const lic = ['S','M','L'].reduce((a,k) => a + h[k]*SITE[k], 0) * LIC[y];
     const aws = ((['S','M','L'].reduce((a,k) => a + h[k]*AWS[k], 0))*MO[y] + TALK.reduce((a,t) => a + vol(t.k)*t.cloud, 0) + (ws*TOK_WS*MO[y] + tok)*LLM)*(1+BILL);
@@ -574,7 +589,24 @@ function calcNet(name){
   return out;
 }
 const PARTS = [['fde','FDE · שעות עבודה','var(--c3)'],['talk','Jeen Talk','var(--c1)'],['lic','רישוי אתר','var(--c5)'],['agents','Jeen Agents · טוקנים','var(--c8)'],['aws','תשתית ענן','var(--c7)']];
+const avgUC = k => { const l = UC_TPL.filter(t => t.k !== 'custom'); return l.reduce((a,t) => a + ucILS(scaleH(t.h, k)), 0) / l.length; };
+function renderNetUC(){
+  $('#net-ucs').innerHTML = UC_TPL.filter(t => t.k !== 'custom').map(t => `<button type="button" class="chipbtn" data-netuc="${t.k}" aria-pressed="${NETS.ucs1.includes(t.k)}">${t.n}</button>`).join('');
+  const el = $('#nucN'); if (document.activeElement !== el) el.value = num(NETS.ucN);
+  const c1 = k => NETS.ucs1.reduce((b,t) => b + ucILS(scaleH(TPL[t].h, k)), 0) / S.fx;
+  $('#net-uc-hint').innerHTML = `${NETS.ucs1.length} Use Case${NETS.ucs1.length === 1 ? '' : 's'} בשנת ההצטרפות · FDE לבית חולים: קטן <span class="num">${fmt(c1('S'))}</span>, בינוני <span class="num">${fmt(c1('M'))}</span>, גדול <span class="num">${fmt(c1('L'))}</span>`;
+  $('#nucN-r').innerHTML = `לפי עלות ממוצעת ל-Use Case: קטן <span class="num">${fmt(avgUC('S')/S.fx)}</span>, בינוני <span class="num">${fmt(avgUC('M')/S.fx)}</span>, גדול <span class="num">${fmt(avgUC('L')/S.fx)}</span>`;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-netuc]');
+  if (t) { const k = t.dataset.netuc; NETS.ucs1 = NETS.ucs1.includes(k) ? NETS.ucs1.filter(x => x !== k) : [...NETS.ucs1, k]; renderNet(); const b = document.querySelector(`[data-netuc="${k}"]`); if (b) b.focus(); return; }
+  const st = e.target.closest('[data-netstep]');
+  if (st) { NETS.ucN = Math.max(0, NETS.ucN + (+st.dataset.netstep)); renderNet(); }
+});
+document.addEventListener('input', e => { if (e.target.id === 'nucN') { const v = parseInt(e.target.value.replace(/[^\d]/g,''), 10); NETS.ucN = isNaN(v) ? 0 : v; renderNet(); } });
+document.addEventListener('focusout', e => { if (e.target.id === 'nucN') e.target.value = num(NETS.ucN); });
 function renderNet(){
+  renderNetUC();
   $('#scn').innerHTML = Object.keys(PRESETS).map(s => `<button role="radio" data-scn="${s}" aria-checked="${s === NETS.scn}">${s}</button>`).join('');
   $('#scn-hint').textContent = PRESETS[NETS.scn].h;
   const R = rampFor(NETS.scn), edit = NETS.scn === 'מותאם';
@@ -982,7 +1014,7 @@ function ucHTML(u){
   </div></details>`;
 }
 function renderFDE(){
-  $('#uc-list').innerHTML = S.ucs.length ? S.ucs.map(ucHTML).join('') : '<p class="hint">עוד לא נבחרו Use Cases. בחרו Use Case מהרשימה למעלה.</p>';
+  $('#uc-list').innerHTML = S.ucs.length ? S.ucs.map(ucHTML).join('') : '<p class="note">בחרו את ה-Use Cases של בית החולים מהרשימה למעלה. כל Use Case נפתח עם צוות ושעות מוצעים, ואפשר להתאים אותם.</p>';
   updateFDE();
 }
 function updateRole(u, k, typing){
