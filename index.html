@@ -428,7 +428,7 @@ const UC_TPL = [
 const TPL = Object.fromEntries(UC_TPL.map(t => [t.k, t]));
 const scaleH = (h, size) => Object.fromEntries(ROLES.map(r => [r.k, Math.round((h[r.k]||0)*SIZE_MULT[size]/4)*4]));
 let ucSeq = 0;
-const mkUC = (tpl, size, phase, open) => ({id:'u' + (++ucSeq), tpl, name:TPL[tpl].n, phase, open:!!open, h:scaleH(TPL[tpl].h, size)});
+const mkUC = (tpl, size, phase, open) => ({id:'u' + (++ucSeq), tpl, name:TPL[tpl].n, phase, open:!!open, h:scaleH(TPL[tpl].h, size), base:{...TPL[tpl].h}});
 const defaultUCs = size => [];
 const PH = {y1:'שנה ראשונה', yN:'כל שנה נוספת'};
 const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -454,6 +454,7 @@ const $ = s => document.querySelector(s);
 const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
 const fmtK = n => n >= 1e6 ? '$' + (n/1e6).toFixed(n >= 1e7 ? 1 : 2) + 'M' : '$' + Math.round(n/1000).toLocaleString('en-US') + 'K';
 const num = n => Math.round(n).toLocaleString('en-US');
+const vnum = n => (+n).toLocaleString('en-US', {maximumFractionDigits:2});
 const unit = k => NET[k];
 
 // ---------- state ----------
@@ -483,7 +484,7 @@ const STEPS = {ws:50, voice:1000, chat:10, tr:1000, live:1000, xl:500, tok:50, f
 
 
 function syncInputs(){
-  NUMK.forEach(k => { const el = $('#'+k); if (document.activeElement !== el) el.value = k === 'fx' ? S.fx.toFixed(2) : num(S[k]); });
+  NUMK.forEach(k => { const el = $('#'+k); if (document.activeElement !== el) el.value = k === 'fx' ? S.fx.toFixed(2) : vnum(S[k]); });
   document.querySelectorAll('.preset').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.preset === S.size)));
   $('#pilot').setAttribute('aria-checked', String(S.pilot));
   $('#site-note').innerHTML = `<b>רישוי אתר (Site License):</b> <span class="num">${fmt(SITE[S.size])}</span> לשנה לבית חולים ${SIZE_HE[S.size]}, ${S.pilot ? 'החל מהשנה השנייה' : 'ממועד ההצטרפות'}. כולל ${SITE_INCL}.`;
@@ -532,21 +533,22 @@ function renderHospital(){
 // events
 document.addEventListener('input', e => {
   const id = e.target.id;
-  if (NUMK.includes(id)) { const v = id === 'fx' ? parseFloat(e.target.value.replace(/[^\d.]/g,'')) : parseInt(e.target.value.replace(/[^\d]/g,''),10); S[id] = isNaN(v) ? 0 : Math.max(0, v); if (id === 'fx' && S.fx < 0.5) return; renderAll(false); }
+  if (NUMK.includes(id)) { const v = Math.round(parseFloat(e.target.value.replace(/[^\d.]/g,''))*100)/100; S[id] = isNaN(v) ? 0 : Math.max(0, v); if (id === 'fx' && S.fx < 0.5) return; renderAll(false); }
   if (id === 'y1pct') { S.y1pct = +e.target.value; renderAll(); }
   if (QF[id]) { S[QF[id]] = id === 'q-valid' ? Math.max(1, parseInt(e.target.value.replace(/[^\d]/g,''),10) || 1) : e.target.value; save(); }
 });
-document.addEventListener('focusout', e => { const k = e.target.id; if (!NUMK.includes(k)) return; if (k === 'fx' && !(S.fx >= 0.5)) { S.fx = FX_DEF; renderAll(); } e.target.value = k === 'fx' ? S.fx.toFixed(2) : num(S[k]); });
+document.addEventListener('focusout', e => { const k = e.target.id; if (!NUMK.includes(k)) return; if (k === 'fx' && !(S.fx >= 0.5)) { S.fx = FX_DEF; renderAll(); } e.target.value = k === 'fx' ? S.fx.toFixed(2) : vnum(S[k]); });
 document.addEventListener('click', e => {
   const st = e.target.closest('.step[data-for]');
   if (st) { const k = st.dataset.for; S[k] = Math.max(k === 'fx' ? 0.5 : 0, Math.round((S[k] + (+st.dataset.step)*STEPS[k])*100)/100); renderAll(); return; }
   const p = e.target.closest('.preset');
   if (p) { const from = S.size, to = p.dataset.preset;
-    const ucs = S.ucs.map(u => ({...u, h:Object.fromEntries(Object.entries(u.h).map(([k,v]) => [k, Math.round(v*SIZE_MULT[to]/SIZE_MULT[from]/4)*4]))}));
+    const ucs = S.ucs.map(u => { const base = Object.fromEntries(Object.entries(u.h).map(([k,v]) => [k, u.base && k in u.base ? u.base[k] : v/SIZE_MULT[from]]));
+      return {...u, base, h:Object.fromEntries(Object.entries(base).map(([k,v]) => [k, Math.round(v*SIZE_MULT[to]/4)*4]))}; });
     S = {...S, size:to, ...PROFILE[to], ucs}; renderFDE(); renderAll(); if (ucs.length && from !== to) toast('השעות ב-Use Cases הותאמו לגודל בית החולים'); return; }
   const sw = e.target.closest('.switch'); if (sw) { S[sw.id] = !S[sw.id]; renderAll(); return; }
   const yt = e.target.closest('.ytabs button'); if (yt) { S.year = yt.id === 'y-1' ? 1 : 2; renderAll(); return; }
-  const sc = e.target.closest('#scn button'); if (sc) { NETS.scn = sc.dataset.scn; renderNet(); save(); return; }
+  const sc = e.target.closest('#scn button'); if (sc) { const f = document.activeElement === sc; NETS.scn = sc.dataset.scn; renderNet(); if (f) { const n = document.querySelector(`#scn [data-scn="${NETS.scn}"]`); if (n) n.focus(); } return; }
   const tab = e.target.closest('.tab'); if (tab) { showTab(tab.id.replace('tab-','')); return; }
 });
 document.addEventListener('keydown', e => {
@@ -623,7 +625,7 @@ document.addEventListener('change', e => { const el = e.target; if (!(el.dataset
   if (+el.value !== v) toast(`בתי חולים פעילים מצטברים: ${prev} עד ${RAMP_MAX[k]}`); renderNet(); });
 
 document.addEventListener('click', e => { const b = e.target.closest('[data-nfx]'); if (!b) return; S.fx = Math.max(0.5, Math.round((S.fx + (+b.dataset.nfx)*0.05)*100)/100); renderNet(); renderAll(); });
-document.addEventListener('input', e => { if (e.target.id !== 'nfx') return; const v = parseFloat(e.target.value.replace(/[^\d.]/g,'')); if (v >= 0.5) { S.fx = v; renderNet(); renderAll(); } });
+document.addEventListener('input', e => { if (e.target.id !== 'nfx') return; const v = parseFloat(e.target.value.replace(/[^\d.]/g,'')); if (v >= 0.5) { S.fx = Math.round(v*100)/100; renderNet(); renderAll(); } });
 document.addEventListener('focusout', e => { if (e.target.id === 'nfx') e.target.value = S.fx.toFixed(2); });
 
 // ---------- price list ----------
@@ -771,7 +773,7 @@ async function buildDocx(){
   c.push(P('נפח חודשי במצב שוטף. מחירי היחידה קבועים, ללא הנחות סקייל.'));
   const monthly = Q.usage.reduce((a, u) => a + u.v*u.p, 0);
   c.push(table([3438, 1500, 1300, 1600, 1800], ['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש'],
-    [...Q.usage.map(u => [u.n, num(u.v), u.u, '$' + u.p.toFixed(u.dp), fmt(u.v*u.p)]), ['סה״כ שימוש לחודש', '', '', '', fmt(monthly)]], {totalLast:true}));
+    [...Q.usage.map(u => [u.n, vnum(u.v), u.u, '$' + u.p.toFixed(u.dp), fmt(u.v*u.p)]), ['סה״כ שימוש לחודש', '', '', '', fmt(monthly)]], {totalLast:true}));
   c.push(GAP());
   c.push(NOTE('Jeen Talk מחויב ב-Talk Credits: קרדיט אחד עולה $0.252, וכל סוכן צורך מספר קרדיטים ליחידה. מחירי השימוש בטבלה הם התשלום ל-Jeen. מחיר הטוקנים לא כולל את מודלי השפה, בכפוף להתקשרות הקיימת של מערך בתי החולים עם AWS. עלות מודלי השפה מחושבת בתשתית הענן בסעיפים 5 ו-6.'));
 
@@ -889,7 +891,7 @@ async function buildXlsx(){
   head(['רכיב', 'נפח לחודש', 'יחידה', 'מחיר ליחידה', 'עלות לחודש', 'מודלים לחודש · הערכה']);
   const u0 = r;
   const urow = (name, v, unitTxt, base, bv, cloudF, cloudV) => {
-    cell('A' + r, name, {border:true}); inp('B' + r, v, INT); cell('C' + r, unitTxt, {h:'center', border:true, color:MUTE});
+    cell('A' + r, name, {border:true}); inp('B' + r, v, Number.isInteger(v) ? INT : '#,##0.00'); cell('C' + r, unitTxt, {h:'center', border:true, color:MUTE});
     cell('D' + r, f(`${base}`, +bv.toFixed(6)), {fmt:USD4, h:'center', border:true});
     cell('E' + r, f(`B${r}*D${r}`, v*bv), {fmt:USD, h:'center', border:true});
     cell('F' + r, f(cloudF.replace(/B#/g, 'B' + r), cloudV), {fmt:USD, h:'center', border:true, color:MUTE}); r++; };
@@ -908,7 +910,8 @@ async function buildXlsx(){
   sec('עלות שנתית');
   head(['רכיב', 'פירוט', 'שנה ראשונה', 'כל שנה נוספת']);
   const c0 = r; const L1 = Q.y1.lines, L2 = Q.y2.lines;
-  const crow = (i, f1, f2) => { cell('A' + r, L1[i].n, {border:true}); cell('B' + r, L1[i].d.replace(/ · הערכה$/,''), {color:MUTE, size:10, border:true});
+  const XD = ['לפי שעות ה-Use Cases בטבלת ה-FDE', 'Talk Credits × $0.252 · שנה ראשונה לפי היקף השימוש', '$5 למיליון טוקנים · שנה ראשונה לפי היקף השימוש', 'פטור בשנה הראשונה למצטרפים בשנת הפיילוט', '2 סביבות · לפי העלות החודשית בפרמטרים', 'הערכה · שנה ראשונה לפי היקף השימוש'];
+  const crow = (i, f1, f2) => { cell('A' + r, L1[i].n, {border:true}); cell('B' + r, XD[i], {color:MUTE, size:10, border:true, wrap:true});
     cell('C' + r, f(f1, L1[i].v), {fmt:USD, h:'center', border:true}); cell('D' + r, f(f2, L2[i].v), {fmt:USD, h:'center', border:true}); r++; };
   crow(0, `${fdeTot.y1}`, `${fdeTot.yN}`);
   crow(1, `SUM(E${u0}:E${tEnd})*12*${A.y1}`, `SUM(E${u0}:E${tEnd})*12`);
@@ -1051,17 +1054,17 @@ document.addEventListener('click', e => {
   if (ph) { const sc = scopeOf(ph.dataset.ucphase), u = getUC(ph.dataset.ucphase); u.phase = ph.dataset.p; renderFDE(sc); SC[sc].refresh(true);
     const b = document.querySelector(`[data-ucphase="${u.id}"][data-p="${u.phase}"]`); if (b) b.focus(); return; }
   const us = e.target.closest('[data-ucstep]');
-  if (us) { const sc = scopeOf(us.dataset.uc), u = getUC(us.dataset.uc), k = us.dataset.role; u.h[k] = Math.max(0, (u.h[k]||0) + (+us.dataset.ucstep)*8); updateRole(u, k); SC[sc].refresh(true); updateFDE(sc); return; }
+  if (us) { const sc = scopeOf(us.dataset.uc), u = getUC(us.dataset.uc), k = us.dataset.role; u.h[k] = Math.max(0, (u.h[k]||0) + (+us.dataset.ucstep)*8); if (u.base) delete u.base[k]; updateRole(u, k); SC[sc].refresh(true); updateFDE(sc); return; }
 });
 document.addEventListener('change', e => {
   const cb = e.target.closest('[data-ucrole]'); if (!cb) return;
   const sc = scopeOf(cb.dataset.ucrole), u = getUC(cb.dataset.ucrole), k = cb.dataset.role;
-  u.h[k] = cb.checked ? (scaleH(TPL[u.tpl].h, SC[sc].size())[k] || 40) : 0; updateRole(u, k); SC[sc].refresh(true); updateFDE(sc);
+  u.h[k] = cb.checked ? (scaleH(TPL[u.tpl].h, SC[sc].size())[k] || 40) : 0; if (u.base) { if (cb.checked && TPL[u.tpl].h[k]) u.base[k] = TPL[u.tpl].h[k]; else delete u.base[k]; } updateRole(u, k); SC[sc].refresh(true); updateFDE(sc);
 });
 document.addEventListener('input', e => {
   const el = e.target;
   if (el.dataset.uchrs) { const sc = scopeOf(el.dataset.uchrs), u = getUC(el.dataset.uchrs), k = el.dataset.role, v = parseInt(el.value.replace(/[^\d]/g,''), 10);
-    u.h[k] = isNaN(v) ? 0 : v; updateRole(u, k, true); SC[sc].refresh(false); updateFDE(sc); }
+    u.h[k] = isNaN(v) ? 0 : v; if (u.base) delete u.base[k]; updateRole(u, k, true); SC[sc].refresh(false); updateFDE(sc); }
   if (el.dataset.ucname) { const u = getUC(el.dataset.ucname); u.name = el.value; $('#' + u.id + '-t').textContent = u.name || 'Use Case ללא שם'; const g = $('#' + u.id + '-roles'); if (g) g.setAttribute('aria-label', 'בעלי תפקידים ושעות ל-' + (u.name || 'Use Case')); }
 });
 document.addEventListener('focusout', e => { const el = e.target; if (el.dataset && el.dataset.uchrs) { const u = getUC(el.dataset.uchrs); if (u) updateRole(u, el.dataset.role); } });
